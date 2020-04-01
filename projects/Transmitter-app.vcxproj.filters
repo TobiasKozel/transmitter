@@ -92,6 +92,18 @@
     <ClCompile Include="..\..\..\IGraphics\Drawing\IGraphicsSkia.cpp">
       <Filter>IGraphics\Drawing</Filter>
     </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_tcp.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_udp.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Transmitter.h" />
@@ -288,6 +300,21 @@
     <ClInclude Include="..\..\..\IPlug\IPlugPluginBase.h">
       <Filter>IPlug</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\OpusWrapper.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TransmitterSession.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\netlib.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\platform.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\util.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">
@@ -319,6 +346,15 @@
     </Filter>
     <Filter Include="IPlug\APP\RTAudioMidi\include">
       <UniqueIdentifier>{649c5de3-b4c2-4de9-8d57-3b1762646259}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{27e00f57-1c44-4243-a876-035b4943efe9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty">
+      <UniqueIdentifier>{caa91f75-6aed-41cd-9d2e-6ed707423301}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty\netlib">
+      <UniqueIdentifier>{272a92e1-64ec-4dad-8ae6-60c9c44c0b13}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

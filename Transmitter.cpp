@@ -1,9 +1,10 @@
 #include "Transmitter.h"
 #include "IPlug_include_in_plug_src.h"
 #include "IControls.h"
+#include "./thirdparty/json.hpp"
 
 Transmitter::Transmitter(const InstanceInfo& info)
-: Plugin(info, MakeConfig(kNumParams, kNumPrograms))
+: Plugin(info, MakeConfig(kNumParams, kNumPrograms)), mSessionManager("localhost", 55555, 55556)
 {
   GetParam(kGain)->InitDouble("Gain", 0., 0., 100.0, 0.01, "%");
 
@@ -21,6 +22,20 @@ Transmitter::Transmitter(const InstanceInfo& info)
     pGraphics->AttachControl(new IVKnobControl(b.GetCentredInside(100).GetVShifted(-100), kGain));
   };
 #endif
+}
+
+bool Transmitter::SerializeState(iplug::IByteChunk& chunk) const {
+  WDL_String serialized;
+  if (serialized.GetLength() < 1) {
+    return false;
+  }
+  chunk.PutStr(serialized.Get());
+  return true;
+}
+
+int Transmitter::UnserializeState(const iplug::IByteChunk& chunk, int startPos) {
+  WDL_String json_string;
+  return startPos;
 }
 
 #if IPLUG_DSP

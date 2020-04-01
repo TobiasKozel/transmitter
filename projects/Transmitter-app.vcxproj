@@ -148,6 +148,7 @@
       <PreprocessorDefinitions>$(APP_DEFS);$(DEBUG_DEFS);$(EXTRA_DEBUG_DEFS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(APP_INC_PATHS);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(APP_LIBS);%(AdditionalDependencies)</AdditionalDependencies>
@@ -165,6 +166,7 @@
       <PreprocessorDefinitions>$(APP_DEFS);$(DEBUG_DEFS);$(EXTRA_DEBUG_DEFS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(APP_INC_PATHS);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(APP_LIBS);%(AdditionalDependencies)</AdditionalDependencies>
@@ -322,6 +324,11 @@
     <ClInclude Include="..\..\..\IPlug\IPlugUtilities.h" />
     <ClInclude Include="..\..\..\IPlug\IPlug_include_in_plug_hdr.h" />
     <ClInclude Include="..\..\..\IPlug\IPlug_include_in_plug_src.h" />
+    <ClInclude Include="..\src\OpusWrapper.h" />
+    <ClInclude Include="..\src\TransmitterSession.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\netlib.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\platform.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\util.h" />
     <ClInclude Include="..\Transmitter.h" />
     <ClInclude Include="..\resources\resource.h" />
   </ItemGroup>
@@ -405,6 +412,10 @@
     <ClCompile Include="..\..\..\IPlug\IPlugPluginBase.cpp" />
     <ClCompile Include="..\..\..\IPlug\IPlugProcessor.cpp" />
     <ClCompile Include="..\..\..\IPlug\IPlugTimer.cpp" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_tcp.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_udp.c" />
     <ClCompile Include="..\Transmitter.cpp" />
   </ItemGroup>
   <ItemGroup>

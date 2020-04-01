@@ -2,8 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
     <IPLUG2_ROOT>$(ProjectDir)..\..\..</IPLUG2_ROOT>
+    <EXTRA_INC_PATHS>$(SolutionDir)thirdparty\</EXTRA_INC_PATHS>
     <BINARY_NAME>Transmitter</BINARY_NAME>
-    <EXTRA_ALL_DEFS>IGRAPHICS_NANOVG;IGRAPHICS_GL2;IGRAPHICS_VSYNC</EXTRA_ALL_DEFS>
+    <EXTRA_ALL_DEFS>IGRAPHICS_CAIRO;IGRAPHICS_CPU;IGRAPHICS_VSYNC;SAMPLE_TYPE_FLOAT</EXTRA_ALL_DEFS>
     <EXTRA_DEBUG_DEFS />
     <EXTRA_RELEASE_DEFS />
     <EXTRA_TRACER_DEFS />
