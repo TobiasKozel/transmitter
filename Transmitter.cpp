@@ -4,8 +4,7 @@
 #include "./thirdparty/json.hpp"
 
 Transmitter::Transmitter(const InstanceInfo& info)
-: Plugin(info, MakeConfig(kNumParams, kNumPrograms)), mSessionManager("localhost", 55555, 55556)
-{
+: Plugin(info, MakeConfig(kNumParams, kNumPrograms)) {
   GetParam(kGain)->InitDouble("Gain", 0., 0., 100.0, 0.01, "%");
 
 #if IPLUG_EDITOR // http://bit.ly/2S64BDd
@@ -18,8 +17,15 @@ Transmitter::Transmitter(const InstanceInfo& info)
     pGraphics->AttachPanelBackground(COLOR_GRAY);
     pGraphics->LoadFont("Roboto-Regular", ROBOTO_FN);
     const IRECT b = pGraphics->GetBounds();
-    pGraphics->AttachControl(new ITextControl(b.GetMidVPadded(50), "Hello iPlug 2!", IText(50)));
     pGraphics->AttachControl(new IVKnobControl(b.GetCentredInside(100).GetVShifted(-100), kGain));
+    mSessionManager.init("127.0.0.1", 55556, 55555);
+    if (mSessionManager.getId().empty()) {
+      mSessionManager.start();
+    }
+    pGraphics->AttachControl(new ITextControl(b.GetMidVPadded(50), mSessionManager.getId().c_str(), IText(50)));
+    if (mSessionManager.getId() == "!1") {
+      mSessionManager.connectAsListener("!0");
+    }
   };
 #endif
 }
@@ -39,14 +45,13 @@ int Transmitter::UnserializeState(const iplug::IByteChunk& chunk, int startPos) 
 }
 
 #if IPLUG_DSP
-void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
-{
-  const double gain = GetParam(kGain)->Value() / 100.;
+void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   const int nChans = NOutChansConnected();
-  
-  for (int s = 0; s < nFrames; s++) {
+  mSessionManager.pushSamples(inputs, nFrames);
+  mSessionManager.pollSamples(outputs, nFrames);
+  for (int i = 0; i < nFrames; i++) {
     for (int c = 0; c < nChans; c++) {
-      outputs[c][s] = inputs[c][s] * gain;
+      outputs[c][i] += inputs[c][i]; // Add the old signal on top
     }
   }
 }

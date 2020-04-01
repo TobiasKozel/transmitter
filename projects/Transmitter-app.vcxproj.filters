@@ -315,6 +315,9 @@
     <ClInclude Include="..\thirdparty\netlib\src\util.h">
       <Filter>thirdparty\netlib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TransmitterState.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">

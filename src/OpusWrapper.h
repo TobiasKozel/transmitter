@@ -28,7 +28,7 @@ namespace transmitter {
       opus_encoder_ctl(mEncoder, OPUS_SET_PHASE_INVERSION_DISABLED(1)); // Without this, mono sounds really bad at lower bit rates
       opus_encoder_ctl(mEncoder, OPUS_SET_BITRATE(128000)); // 128 kBit/s
       opus_encoder_ctl(mEncoder, OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC));
-      opus_encoder_ctl(mEncoder, OPUS_SET_VBR(0)); // TODO find out if this does anything for the latency
+      // opus_encoder_ctl(mEncoder, OPUS_SET_VBR(0)); // TODO find out if this does anything for the latency
     }
 
     ~WrappedOpusEncoder() {
@@ -42,15 +42,17 @@ namespace transmitter {
     void pushSamples(float** samples, int count) {
       mBuffer[0].add(samples[0], count);
       mBuffer[1].add(samples[1], count);
-      if (mFrameSize <= mBuffer[0].inBuffer()) {
+      if (mFrameSize >= mBuffer[0].inBuffer()) {
         for (int c = 0; c < OPUS_CHANNELS; c++) {
-          mBuffer[c].get(mPreInterleave, count);
-          for (int i = c, s = 0; s < count; i += 2, s++) {
+          mBuffer[c].get(mPreInterleave, mFrameSize);
+          for (int i = c, s = 0; s < mFrameSize; i += 2, s++) {
             mInterleaved[i] = mPreInterleave[s]; // interleave the signal
           }
         }
-
-        mPacketSize = opus_encode_float(mEncoder, mInterleaved, count, mPacket, MAX_PACKET_SIZE);
+        mPacketSize = opus_encode_float(mEncoder, mInterleaved, mFrameSize, mPacket, MAX_PACKET_SIZE);
+        if (mPacketSize < 0) {
+          assert(false);
+        }
       }
     }
 

@@ -326,6 +326,7 @@
     <ClInclude Include="..\..\..\IPlug\IPlug_include_in_plug_src.h" />
     <ClInclude Include="..\src\OpusWrapper.h" />
     <ClInclude Include="..\src\TransmitterSession.h" />
+    <ClInclude Include="..\src\TransmitterState.h" />
     <ClInclude Include="..\thirdparty\netlib\src\netlib.h" />
     <ClInclude Include="..\thirdparty\netlib\src\platform.h" />
     <ClInclude Include="..\thirdparty\netlib\src\util.h" />

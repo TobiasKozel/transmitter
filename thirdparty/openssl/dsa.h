@@ -1,20 +1,19 @@
 /*
  * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
 
-#ifndef OPENSSL_DSA_H
-# define OPENSSL_DSA_H
-# pragma once
+/*
+ * The DSS routines are based on patches supplied by
+ * Steven Schoch <schoch@sheba.arc.nasa.gov>.
+ */
 
-# include <openssl/macros.h>
-# ifndef OPENSSL_NO_DEPRECATED_3_0
-#  define HEADER_DSA_H
-# endif
+#ifndef HEADER_DSA_H
+# define HEADER_DSA_H
 
 # include <openssl/opensslconf.h>
 
@@ -23,15 +22,14 @@
 extern "C" {
 # endif
 # include <openssl/e_os2.h>
-# include <openssl/asn1.h>
 # include <openssl/bio.h>
 # include <openssl/crypto.h>
-# include <openssl/types.h>
+# include <openssl/ossl_typ.h>
+# include <openssl/opensslconf.h>
 # include <openssl/bn.h>
-# ifndef OPENSSL_NO_DEPRECATED_1_1_0
+# if OPENSSL_API_COMPAT < 0x10100000L
 #  include <openssl/dh.h>
 # endif
-# include <openssl/dsaerr.h>
 
 # ifndef OPENSSL_DSA_MAX_MODULUS_BITS
 #  define OPENSSL_DSA_MAX_MODULUS_BITS   10000
@@ -40,7 +38,7 @@ extern "C" {
 # define OPENSSL_DSA_FIPS_MIN_MODULUS_BITS 1024
 
 # define DSA_FLAG_CACHE_MONT_P   0x01
-# ifndef OPENSSL_NO_DEPRECATED_1_1_0
+# if OPENSSL_API_COMPAT < 0x10100000L
 /*
  * Does nothing. Previously this switched off constant time behaviour.
  */
@@ -76,12 +74,13 @@ typedef struct DSA_SIG_st DSA_SIG;
 # define i2d_DSAparams_fp(fp,x) ASN1_i2d_fp(i2d_DSAparams,(fp), \
                 (unsigned char *)(x))
 # define d2i_DSAparams_bio(bp,x) ASN1_d2i_bio_of(DSA,DSA_new,d2i_DSAparams,bp,x)
-# define i2d_DSAparams_bio(bp,x) ASN1_i2d_bio_of(DSA,i2d_DSAparams,bp,x)
+# define i2d_DSAparams_bio(bp,x) ASN1_i2d_bio_of_const(DSA,i2d_DSAparams,bp,x)
 
-DECLARE_ASN1_DUP_FUNCTION_name(DSA, DSAparams)
+DSA *DSAparams_dup(DSA *x);
 DSA_SIG *DSA_SIG_new(void);
 void DSA_SIG_free(DSA_SIG *a);
-DECLARE_ASN1_ENCODE_FUNCTIONS_only(DSA_SIG, DSA_SIG)
+int i2d_DSA_SIG(const DSA_SIG *a, unsigned char **pp);
+DSA_SIG *d2i_DSA_SIG(DSA_SIG **v, const unsigned char **pp, long length);
 void DSA_SIG_get0(const DSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps);
 int DSA_SIG_set0(DSA_SIG *sig, BIGNUM *r, BIGNUM *s);
 
@@ -105,7 +104,7 @@ int DSA_size(const DSA *);
 int DSA_bits(const DSA *d);
 int DSA_security_bits(const DSA *d);
         /* next 4 return -1 on error */
-DEPRECATEDIN_3_0(int DSA_sign_setup(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp))
+int DSA_sign_setup(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp);
 int DSA_sign(int type, const unsigned char *dgst, int dlen,
              unsigned char *sig, unsigned int *siglen, DSA *dsa);
 int DSA_verify(int type, const unsigned char *dgst, int dgst_len,
@@ -115,9 +114,9 @@ int DSA_verify(int type, const unsigned char *dgst, int dgst_len,
 int DSA_set_ex_data(DSA *d, int idx, void *arg);
 void *DSA_get_ex_data(DSA *d, int idx);
 
-DECLARE_ASN1_ENCODE_FUNCTIONS_only(DSA, DSAPublicKey)
-DECLARE_ASN1_ENCODE_FUNCTIONS_only(DSA, DSAPrivateKey)
-DECLARE_ASN1_ENCODE_FUNCTIONS_only(DSA, DSAparams)
+DSA *d2i_DSAPublicKey(DSA **a, const unsigned char **pp, long length);
+DSA *d2i_DSAPrivateKey(DSA **a, const unsigned char **pp, long length);
+DSA *d2i_DSAparams(DSA **a, const unsigned char **pp, long length);
 
 /* Deprecated version */
 DEPRECATEDIN_0_9_8(DSA *DSA_generate_parameters(int bits,
@@ -136,6 +135,9 @@ int DSA_generate_parameters_ex(DSA *dsa, int bits,
                                BN_GENCB *cb);
 
 int DSA_generate_key(DSA *a);
+int i2d_DSAPublicKey(const DSA *a, unsigned char **pp);
+int i2d_DSAPrivateKey(const DSA *a, unsigned char **pp);
+int i2d_DSAparams(const DSA *a, unsigned char **pp);
 
 int DSAparams_print(BIO *bp, const DSA *x);
 int DSA_print(BIO *bp, const DSA *x, int off);
@@ -144,17 +146,15 @@ int DSAparams_print_fp(FILE *fp, const DSA *x);
 int DSA_print_fp(FILE *bp, const DSA *x, int off);
 # endif
 
-# ifndef OPENSSL_NO_DEPRECATED_3_0
-#  define DSS_prime_checks 64
+# define DSS_prime_checks 64
 /*
  * Primality test according to FIPS PUB 186-4, Appendix C.3. Since we only
  * have one value here we set the number of checks to 64 which is the 128 bit
  * security level that is the highest level and valid for creating a 3072 bit
  * DSA key.
  */
-#  define DSA_is_prime(n, callback, cb_arg) \
-           BN_is_prime(n, DSS_prime_checks, callback, NULL, cb_arg)
-# endif
+# define DSA_is_prime(n, callback, cb_arg) \
+        BN_is_prime(n, DSS_prime_checks, callback, NULL, cb_arg)
 
 # ifndef OPENSSL_NO_DH
 /*
@@ -167,12 +167,6 @@ DH *DSA_dup_DH(const DSA *r);
 # define EVP_PKEY_CTX_set_dsa_paramgen_bits(ctx, nbits) \
         EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_DSA, EVP_PKEY_OP_PARAMGEN, \
                                 EVP_PKEY_CTRL_DSA_PARAMGEN_BITS, nbits, NULL)
-# define EVP_PKEY_CTX_set_dsa_paramgen_q_bits(ctx, qbits) \
-        EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_DSA, EVP_PKEY_OP_PARAMGEN, \
-                                EVP_PKEY_CTRL_DSA_PARAMGEN_Q_BITS, qbits, NULL)
-# define EVP_PKEY_CTX_set_dsa_paramgen_md(ctx, md) \
-        EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_DSA, EVP_PKEY_OP_PARAMGEN, \
-                                EVP_PKEY_CTRL_DSA_PARAMGEN_MD, 0, (void *)(md))
 
 # define EVP_PKEY_CTRL_DSA_PARAMGEN_BITS         (EVP_PKEY_ALG_CTRL + 1)
 # define EVP_PKEY_CTRL_DSA_PARAMGEN_Q_BITS       (EVP_PKEY_ALG_CTRL + 2)
@@ -184,11 +178,6 @@ int DSA_set0_pqg(DSA *d, BIGNUM *p, BIGNUM *q, BIGNUM *g);
 void DSA_get0_key(const DSA *d,
                   const BIGNUM **pub_key, const BIGNUM **priv_key);
 int DSA_set0_key(DSA *d, BIGNUM *pub_key, BIGNUM *priv_key);
-const BIGNUM *DSA_get0_p(const DSA *d);
-const BIGNUM *DSA_get0_q(const DSA *d);
-const BIGNUM *DSA_get0_g(const DSA *d);
-const BIGNUM *DSA_get0_pub_key(const DSA *d);
-const BIGNUM *DSA_get0_priv_key(const DSA *d);
 void DSA_clear_flags(DSA *d, int flags);
 int DSA_test_flags(const DSA *d, int flags);
 void DSA_set_flags(DSA *d, int flags);
@@ -212,7 +201,7 @@ int (*DSA_meth_get_sign_setup(const DSA_METHOD *dsam))
 int DSA_meth_set_sign_setup(DSA_METHOD *dsam,
         int (*sign_setup) (DSA *, BN_CTX *, BIGNUM **, BIGNUM **));
 int (*DSA_meth_get_verify(const DSA_METHOD *dsam))
-        (const unsigned char *, int, DSA_SIG *, DSA *);
+        (const unsigned char *, int , DSA_SIG *, DSA *);
 int DSA_meth_set_verify(DSA_METHOD *dsam,
     int (*verify) (const unsigned char *, int, DSA_SIG *, DSA *));
 int (*DSA_meth_get_mod_exp(const DSA_METHOD *dsam))
@@ -241,6 +230,54 @@ int DSA_meth_set_paramgen(DSA_METHOD *dsam,
 int (*DSA_meth_get_keygen(const DSA_METHOD *dsam)) (DSA *);
 int DSA_meth_set_keygen(DSA_METHOD *dsam, int (*keygen) (DSA *));
 
+/* BEGIN ERROR CODES */
+/*
+ * The following lines are auto generated by the script mkerr.pl. Any changes
+ * made after this point may be overwritten when the script is next run.
+ */
+
+int ERR_load_DSA_strings(void);
+
+/* Error codes for the DSA functions. */
+
+/* Function codes. */
+# define DSA_F_DSAPARAMS_PRINT                            100
+# define DSA_F_DSAPARAMS_PRINT_FP                         101
+# define DSA_F_DSA_BUILTIN_PARAMGEN                       125
+# define DSA_F_DSA_BUILTIN_PARAMGEN2                      126
+# define DSA_F_DSA_DO_SIGN                                112
+# define DSA_F_DSA_DO_VERIFY                              113
+# define DSA_F_DSA_METH_DUP                               127
+# define DSA_F_DSA_METH_NEW                               128
+# define DSA_F_DSA_METH_SET1_NAME                         129
+# define DSA_F_DSA_NEW_METHOD                             103
+# define DSA_F_DSA_PARAM_DECODE                           119
+# define DSA_F_DSA_PRINT_FP                               105
+# define DSA_F_DSA_PRIV_DECODE                            115
+# define DSA_F_DSA_PRIV_ENCODE                            116
+# define DSA_F_DSA_PUB_DECODE                             117
+# define DSA_F_DSA_PUB_ENCODE                             118
+# define DSA_F_DSA_SIGN                                   106
+# define DSA_F_DSA_SIGN_SETUP                             107
+# define DSA_F_DSA_SIG_NEW                                102
+# define DSA_F_OLD_DSA_PRIV_DECODE                        122
+# define DSA_F_PKEY_DSA_CTRL                              120
+# define DSA_F_PKEY_DSA_CTRL_STR                          104
+# define DSA_F_PKEY_DSA_KEYGEN                            121
+
+/* Reason codes. */
+# define DSA_R_BAD_Q_VALUE                                102
+# define DSA_R_BN_DECODE_ERROR                            108
+# define DSA_R_BN_ERROR                                   109
+# define DSA_R_DECODE_ERROR                               104
+# define DSA_R_INVALID_DIGEST_TYPE                        106
+# define DSA_R_INVALID_PARAMETERS                         112
+# define DSA_R_MISSING_PARAMETERS                         101
+# define DSA_R_MODULUS_TOO_LARGE                          103
+# define DSA_R_NO_PARAMETERS_SET                          107
+# define DSA_R_PARAMETER_ENCODING_ERROR                   105
+# define DSA_R_Q_NOT_PRIME                                113
+# define DSA_R_SEED_LEN_SMALL                             110
 
 #  ifdef  __cplusplus
 }

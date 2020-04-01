@@ -36,7 +36,8 @@ const UTIL = {
 	* Will simply return a unique id
 	*/
 	generateId: function () {
-		return "" + (tempId++);
+		if (tempId == 2) tempId = 1;
+		return "!" + (tempId++);
 	},
 	ipFromReq: function(req) {
 		return req.headers['x-forwarded-for'] || req.connection.remoteAddress || 
@@ -90,6 +91,7 @@ class Client {
 		 * If it's a wesocket connection
 		 */
 		this.webSocket = null;
+		this.timeOut = 0;
 	}
 
 	setAddress(ip, port) {
@@ -101,10 +103,24 @@ class Client {
 let clients = [];
 let connections = [];
 
-function handleOpusPacket(packet, info) {
-	console.log(packet);
-	console.log(info);
-	debugger;
+function handleOpusPacket(packet, port, address) {
+	for (let i of clients) {
+		if (i.ip === address && i.port === port) {
+			i.timeOut = 0;
+			for (let j of connections) {
+				if (j.from === i) {
+					j.to.timeOut = 0;
+					if (to.webSocket) {
+						// todo
+					} else {
+						udp4.send(packet, to.port, to.ip);
+					}
+				}
+			}
+			debugger;
+			break;
+		}
+	}
 }
 
 
@@ -116,18 +132,21 @@ function handleOpusPacket(packet, info) {
  * @returns {string} Will return the client has
  */
 function registerClient(port, ip, id) {
+	if (ip === "::ffff:127.0.0.1" || ip === "::1") {
+		ip = "127.0.0.1";
+	}
 	if (id) {
 		for (let i of clients) {
 			if (i.id === id) {
 				i.setAddress(ip, port);
-				UTIL.log("Register: Updated existing client " + ip + " id " + id);
+				UTIL.log("Register: Updated existing client " + ip + " id " + id + " port " + port);
 				return id;
 			}
 		}
 	}
 	const c = new Client(ip, port, id);
 	clients.push(c);
-	UTIL.log("Register: new client " + ip + " id " + c.id);
+	UTIL.log("Register: new client " + ip + " id " + c.id + " port " + port);
 	return c.id;
 }
 
@@ -162,6 +181,7 @@ function addListener(selfId, peerId) {
 		}
 
 		connections.push(new Connection(self, peer));
+		UTIL.log("Added listener " + peer.id + " to " + self.id);
 		return true;
 	}
 	return false;
@@ -227,7 +247,7 @@ const handleAPIRequest = function(req, res) {
 	 */
 	if ("/connect_listener" === pathname) {
 		response.type = "connection_result";
-		response.success = addListener(parsed.query["id"], parsed.query["peer"]);
+		response.success = addListener(parsed.query["peer"], parsed.query["id"]);
 	}
 
 	/**
@@ -257,8 +277,9 @@ wssServer.on("connection", (ws, request, client) => {
 	debugger;
 	ws.on("message", (message) => {
 		// TODO send the packet to all the, not a priority
-		handleOpusPacket(message, client);
+		let test = client;
 		debugger;
+		handleOpusPacket(message, 0, 0);
 	});
 	ws.on("close", () => {
 		// TODO get rid of the client from this connection
@@ -270,7 +291,7 @@ wssServer.on("connection", (ws, request, client) => {
  * The udp server for opus packets
  */
 udp4.on("message", (message, rinfo) => {
-	handleOpusPacket(message, rinfo);
+	handleOpusPacket(message, rinfo.port, rinfo.address);
 });
 
 udp4.on("listening", () => {

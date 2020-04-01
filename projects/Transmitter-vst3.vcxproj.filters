@@ -143,6 +143,18 @@
     <ClCompile Include="..\..\..\IGraphics\IGraphicsEditorDelegate.cpp">
       <Filter>IGraphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_tcp.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_udp.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../config.h" />
@@ -381,6 +393,15 @@
     <ClInclude Include="..\..\..\IPlug\IPlugPluginBase.h">
       <Filter>IPlug</Filter>
     </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\netlib.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\platform.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\util.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">
@@ -439,6 +460,12 @@
     </Filter>
     <Filter Include="IPlug\VST3\VST3_SDK\plugininterfaces\base">
       <UniqueIdentifier>{5f06b03e-5093-46c0-9513-efb4e494c857}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty">
+      <UniqueIdentifier>{3ed0d168-4426-438b-bb81-f7dad629a4a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty\netlib">
+      <UniqueIdentifier>{1e78c069-9b7e-4ae1-9298-154d68c80f73}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

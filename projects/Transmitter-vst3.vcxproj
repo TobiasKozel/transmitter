@@ -154,6 +154,7 @@
       <PreprocessorDefinitions>$(VST3_DEFS);$(DEBUG_DEFS);$(EXTRA_DEBUG_DEFS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(VST3_INC_PATHS);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -170,6 +171,7 @@
       <PreprocessorDefinitions>$(VST3_DEFS);$(DEBUG_DEFS);$(EXTRA_DEBUG_DEFS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(VST3_INC_PATHS);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -337,6 +339,9 @@
     <ClInclude Include="..\..\..\IPlug\VST3\IPlugVST3_Parameter.h" />
     <ClInclude Include="..\..\..\IPlug\VST3\IPlugVST3_ProcessorBase.h" />
     <ClInclude Include="..\..\..\IPlug\VST3\IPlugVST3_View.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\netlib.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\platform.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\util.h" />
     <ClInclude Include="..\Transmitter.h" />
     <ClInclude Include="..\resources\resource.h" />
   </ItemGroup>
@@ -423,6 +428,10 @@
     <ClCompile Include="..\..\..\IPlug\IPlugTimer.cpp" />
     <ClCompile Include="..\..\..\IPlug\VST3\IPlugVST3.cpp" />
     <ClCompile Include="..\..\..\IPlug\VST3\IPlugVST3_ProcessorBase.cpp" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_tcp.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_udp.c" />
     <ClCompile Include="..\Transmitter.cpp" />
   </ItemGroup>
   <ItemGroup>

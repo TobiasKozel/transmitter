@@ -1,25 +1,19 @@
 /*
  * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
 
-#ifndef OPENSSL_X509_VFY_H
-# define OPENSSL_X509_VFY_H
-# pragma once
-
-# include <openssl/macros.h>
-# ifndef OPENSSL_NO_DEPRECATED_3_0
-#  define HEADER_X509_VFY_H
-# endif
+#ifndef HEADER_X509_VFY_H
+# define HEADER_X509_VFY_H
 
 /*
  * Protect against recursion, x509.h and x509_vfy.h each include the other.
  */
-# ifndef OPENSSL_X509_H
+# ifndef HEADER_X509_H
 #  include <openssl/x509.h>
 # endif
 
@@ -55,7 +49,7 @@ typedef enum {
     X509_LU_X509, X509_LU_CRL
 } X509_LOOKUP_TYPE;
 
-#ifndef OPENSSL_NO_DEPRECATED_1_1_0
+#if OPENSSL_API_COMPAT < 0x10100000L
 #define X509_LU_RETRY   -1
 #define X509_LU_FAIL    0
 #endif
@@ -95,20 +89,12 @@ void X509_STORE_CTX_set_depth(X509_STORE_CTX *ctx, int depth);
 
 # define X509_L_FILE_LOAD        1
 # define X509_L_ADD_DIR          2
-# define X509_L_ADD_STORE        3
-# define X509_L_LOAD_STORE       4
 
 # define X509_LOOKUP_load_file(x,name,type) \
                 X509_LOOKUP_ctrl((x),X509_L_FILE_LOAD,(name),(long)(type),NULL)
 
 # define X509_LOOKUP_add_dir(x,name,type) \
                 X509_LOOKUP_ctrl((x),X509_L_ADD_DIR,(name),(long)(type),NULL)
-
-# define X509_LOOKUP_add_store(x,name) \
-                X509_LOOKUP_ctrl((x),X509_L_ADD_STORE,(name),0,NULL)
-
-# define X509_LOOKUP_load_store(x,name) \
-                X509_LOOKUP_ctrl((x),X509_L_LOAD_STORE,(name),0,NULL)
 
 # define         X509_V_OK                                       0
 # define         X509_V_ERR_UNSPECIFIED                          1
@@ -194,18 +180,10 @@ void X509_STORE_CTX_set_depth(X509_STORE_CTX *ctx, int depth);
 # define         X509_V_ERR_NO_VALID_SCTS                        71
 
 # define         X509_V_ERR_PROXY_SUBJECT_NAME_VIOLATION         72
-/* OCSP status errors */
-# define         X509_V_ERR_OCSP_VERIFY_NEEDED                   73  /* Need OCSP verification */
-# define         X509_V_ERR_OCSP_VERIFY_FAILED                   74  /* Couldn't verify cert through OCSP */
-# define         X509_V_ERR_OCSP_CERT_UNKNOWN                    75  /* Certificate wasn't recognized by the OCSP responder */
-
-# define         X509_V_ERR_SIGNATURE_ALGORITHM_MISMATCH         76
-# define         X509_V_ERR_NO_ISSUER_PUBLIC_KEY                 77
-
 
 /* Certificate verify flags */
 
-# ifndef OPENSSL_NO_DEPRECATED_1_1_0
+# if OPENSSL_API_COMPAT < 0x10100000L
 #  define X509_V_FLAG_CB_ISSUER_CHECK             0x0   /* Deprecated */
 # endif
 /* Use check time instead of current time */
@@ -375,23 +353,18 @@ X509_STORE_CTX_lookup_certs_fn X509_STORE_CTX_get_lookup_certs(X509_STORE_CTX *c
 X509_STORE_CTX_lookup_crls_fn X509_STORE_CTX_get_lookup_crls(X509_STORE_CTX *ctx);
 X509_STORE_CTX_cleanup_fn X509_STORE_CTX_get_cleanup(X509_STORE_CTX *ctx);
 
-#ifndef OPENSSL_NO_DEPRECATED_1_1_0
+#if OPENSSL_API_COMPAT < 0x10100000L
 # define X509_STORE_CTX_get_chain X509_STORE_CTX_get0_chain
 # define X509_STORE_CTX_set_chain X509_STORE_CTX_set0_untrusted
 # define X509_STORE_CTX_trusted_stack X509_STORE_CTX_set0_trusted_stack
 # define X509_STORE_get_by_subject X509_STORE_CTX_get_by_subject
-# define X509_STORE_get1_certs X509_STORE_CTX_get1_certs
-# define X509_STORE_get1_crls X509_STORE_CTX_get1_crls
-/* the following macro is misspelled; use X509_STORE_get1_certs instead */
 # define X509_STORE_get1_cert X509_STORE_CTX_get1_certs
-/* the following macro is misspelled; use X509_STORE_get1_crls instead */
 # define X509_STORE_get1_crl X509_STORE_CTX_get1_crls
 #endif
 
 X509_LOOKUP *X509_STORE_add_lookup(X509_STORE *v, X509_LOOKUP_METHOD *m);
 X509_LOOKUP_METHOD *X509_LOOKUP_hash_dir(void);
 X509_LOOKUP_METHOD *X509_LOOKUP_file(void);
-X509_LOOKUP_METHOD *X509_LOOKUP_store(void);
 
 typedef int (*X509_LOOKUP_ctrl_fn)(X509_LOOKUP *ctx, int cmd, const char *argc,
                                    long argl, char **ret);
@@ -497,11 +470,8 @@ void *X509_LOOKUP_get_method_data(const X509_LOOKUP *ctx);
 X509_STORE *X509_LOOKUP_get_store(const X509_LOOKUP *ctx);
 int X509_LOOKUP_shutdown(X509_LOOKUP *ctx);
 
-int X509_STORE_load_file(X509_STORE *ctx, const char *file);
-int X509_STORE_load_path(X509_STORE *ctx, const char *path);
-int X509_STORE_load_store(X509_STORE *ctx, const char *store);
-DEPRECATEDIN_3_0(int X509_STORE_load_locations(X509_STORE *ctx, const char *file,
-                                             const char *dir))
+int X509_STORE_load_locations(X509_STORE *ctx,
+                              const char *file, const char *dir);
 int X509_STORE_set_default_paths(X509_STORE *ctx);
 
 #define X509_STORE_CTX_get_ex_new_index(l, p, newf, dupf, freef) \
@@ -558,7 +528,7 @@ int X509_VERIFY_PARAM_set_flags(X509_VERIFY_PARAM *param,
                                 unsigned long flags);
 int X509_VERIFY_PARAM_clear_flags(X509_VERIFY_PARAM *param,
                                   unsigned long flags);
-unsigned long X509_VERIFY_PARAM_get_flags(const X509_VERIFY_PARAM *param);
+unsigned long X509_VERIFY_PARAM_get_flags(X509_VERIFY_PARAM *param);
 int X509_VERIFY_PARAM_set_purpose(X509_VERIFY_PARAM *param, int purpose);
 int X509_VERIFY_PARAM_set_trust(X509_VERIFY_PARAM *param, int trust);
 void X509_VERIFY_PARAM_set_depth(X509_VERIFY_PARAM *param, int depth);
