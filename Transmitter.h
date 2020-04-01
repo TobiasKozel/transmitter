@@ -1,5 +1,6 @@
 #pragma once
-
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include "../thirdparty/httplib.h" // Needs to be included here because of windows socket define bullshit
 #include "IPlug_include_in_plug_hdr.h"
 #include "./src/TransmitterSession.h"
 

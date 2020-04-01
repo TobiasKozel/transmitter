@@ -1,10 +1,9 @@
 #pragma once
+#include "../thirdparty/netlib/src/netlib.h"
 #include "../thirdparty/json.hpp"
 
-#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "../thirdparty/httplib.h"
 
-#include "../thirdparty/netlib/src/netlib.h"
 #include <iostream>
 #include "OpusWrapper.h"
 
@@ -39,13 +38,15 @@ namespace transmitter {
       }
 
       if (netlib_resolve_host(&mAddress, masterServer.c_str(), apiPort)) {
+        mPacket->address.host = mAddress.host;
+        mPacket->address.port = mAddress.port;
         mSocket = netlib_udp_open(0);
         mLocalPort = netlib_udp_get_peer_address(mSocket, -1)->port;
       }
       
     }
 
-    void init(std::string id = "") {
+    bool init(std::string id = "") {
       std::string req = "/register?port=" + std::to_string(mLocalPort);
       if (!id.empty()) {
         req += "&id=" + id;
@@ -53,9 +54,40 @@ namespace transmitter {
 
       const auto res = mClient->Get(req.c_str());
       if (res && res->status == 200) {
-        mId = res->body;
+        nlohmann::json json(res->body);
+        mId = json["id"].get<std::string>();
         std::cout << res->body << std::endl;
+        return true;
       }
+      return false;
+    }
+
+    bool connect(std::string id) {
+      std::string req = "/connect?id=" + mId + "&peer=" + id;
+      const auto res = mClient->Get(req.c_str());
+      if (res && res->status == 200) {
+        nlohmann::json json(res->body);
+        std::cout << res->body << std::endl;
+        if (json["success"].get<bool>()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    void sendOpusPacket(unsigned char* data, int length) const {
+      memcpy(mPacket->data, data, length);
+      mPacket->data = data;
+      mPacket->len = length;
+      netlib_udp_send(mSocket, -1, mPacket);
+    }
+
+    int pollOpusPacket(unsigned char* data) const {
+      if (netlib_udp_recv(mSocket, mPacket)) {
+        memcpy(data, mPacket->data, mPacket->len);
+        return mPacket->len;
+      }
+      return 0;
     }
 
     ~SessionManager() {

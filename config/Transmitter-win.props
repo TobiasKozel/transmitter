@@ -3,8 +3,9 @@
   <PropertyGroup Label="UserMacros">
     <IPLUG2_ROOT>$(ProjectDir)..\..\..</IPLUG2_ROOT>
     <EXTRA_INC_PATHS>$(SolutionDir)thirdparty\</EXTRA_INC_PATHS>
+    <EXTRA_LIB_PATHS>$(SolutionDir)thirdparty\static\ssl\win64rls\;$(SolutionDir)thirdparty\static\opus\win64rls</EXTRA_LIB_PATHS>
     <BINARY_NAME>Transmitter</BINARY_NAME>
-    <EXTRA_ALL_DEFS>IGRAPHICS_CAIRO;IGRAPHICS_CPU;IGRAPHICS_VSYNC;SAMPLE_TYPE_FLOAT</EXTRA_ALL_DEFS>
+    <EXTRA_ALL_DEFS>IGRAPHICS_CAIRO;IGRAPHICS_CPU;IGRAPHICS_VSYNC;SAMPLE_TYPE_FLOAT;WINDOWS</EXTRA_ALL_DEFS>
     <EXTRA_DEBUG_DEFS />
     <EXTRA_RELEASE_DEFS />
     <EXTRA_TRACER_DEFS />
@@ -24,7 +25,8 @@
       <PreprocessorDefinitions>$(EXTRA_ALL_DEFS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wininet.lib;comctl32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(EXTRA_LIB_PATHS);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Iphlpapi.lib;Ws2_32.lib;opus.lib;libcrypto.lib;libssl.lib;wininet.lib;comctl32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ProgramDatabaseFile>$(PDB_FILE)</ProgramDatabaseFile>
     </Link>
     <PostBuildEvent>
