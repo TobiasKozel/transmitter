@@ -3,23 +3,43 @@
 #include "../thirdparty/httplib.h" // Needs to be included here because of windows socket define bullshit
 #include "IPlug_include_in_plug_hdr.h"
 #include "./src/TransmitterSession.h"
+#include "IControls.h"
+#include "./src/TextControl.h"
+
 
 const int kNumPrograms = 1;
 
-enum EParams
-{
-  kGain = 0,
+enum EParams {
+  kFrameSize = 0,
+  kBitRate,
+  kPacketLoss,
+  kComplexity,
+  kSilenceThreshold,
+  kNoPhaseInversion,
+  kVolume,
+  kVolumeRemote,
+  kBufferSize,
   kNumParams
 };
 
-using namespace iplug;
-using namespace igraphics;
+#define MASTER_SERVER "localhost:55555"
 
-class Transmitter final : public Plugin
-{
+class Transmitter final : public iplug::Plugin {
+  WDL_PtrList<iplug::igraphics::IControl> mMainTab, mDirectTab;
+  iplug::igraphics::IVButtonControl* mMainTabButton = nullptr, * mDirectTabButton = nullptr;
+  iplug::igraphics::IGraphics* mGraphics = nullptr;
+  transmitter::TextControl* mMasterServer = nullptr;
+  transmitter::TextControl* mMasterPeer = nullptr;
+  transmitter::ITextControl* mMasterId = nullptr;
+  transmitter::ITextControl* mOwnIp = nullptr;
+  transmitter::TextControl* mDirectPeer = nullptr;
+  void switchTab(bool directTab);
 public:
-  Transmitter(const InstanceInfo& info);
+  Transmitter(const iplug::InstanceInfo& info);
   transmitter::SessionManager mSessionManager;
+
+  void OnUIClose() override;
+
   /**
    * Called from outside when a state needs to be saved
    */
@@ -31,6 +51,6 @@ public:
   int UnserializeState(const iplug::IByteChunk& chunk, int startPos) override;
 
 #if IPLUG_DSP // http://bit.ly/2S64BDd
-  void ProcessBlock(sample** inputs, sample** outputs, int nFrames) override;
+  void ProcessBlock(iplug::sample** inputs, iplug::sample** outputs, int nFrames) override;
 #endif
 };

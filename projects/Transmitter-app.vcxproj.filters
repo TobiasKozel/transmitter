@@ -318,6 +318,15 @@
     <ClInclude Include="..\src\TransmitterState.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TextControl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Types.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GUIStyle.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">

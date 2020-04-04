@@ -324,9 +324,12 @@
     <ClInclude Include="..\..\..\IPlug\IPlugUtilities.h" />
     <ClInclude Include="..\..\..\IPlug\IPlug_include_in_plug_hdr.h" />
     <ClInclude Include="..\..\..\IPlug\IPlug_include_in_plug_src.h" />
+    <ClInclude Include="..\src\GUIStyle.h" />
     <ClInclude Include="..\src\OpusWrapper.h" />
+    <ClInclude Include="..\src\TextControl.h" />
     <ClInclude Include="..\src\TransmitterSession.h" />
     <ClInclude Include="..\src\TransmitterState.h" />
+    <ClInclude Include="..\src\Types.h" />
     <ClInclude Include="..\thirdparty\netlib\src\netlib.h" />
     <ClInclude Include="..\thirdparty\netlib\src\platform.h" />
     <ClInclude Include="..\thirdparty\netlib\src\util.h" />
