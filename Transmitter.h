@@ -1,6 +1,13 @@
 #pragma once
+
+/**
+ * Comment this out to compile with out ssl
+ * Connections to a master server with ssl will fail obviously
+ */
 #define CPPHTTPLIB_OPENSSL_SUPPORT
+
 #include "../thirdparty/httplib.h" // Needs to be included here because of windows socket define bullshit
+
 #include "IPlug_include_in_plug_hdr.h"
 #include "IControls.h"
 #include "./src/TextControl.h"
@@ -23,8 +30,6 @@ enum EParams {
   kNumParams
 };
 
-#define MASTER_SERVER "localhost:55555"
-
 class Transmitter final : public iplug::Plugin {
   transmitter::MasterServerSession* mMSession = nullptr;
   WDL_PtrList<iplug::igraphics::IControl> mMainTab, mDirectTab;
@@ -36,6 +41,7 @@ class Transmitter final : public iplug::Plugin {
   transmitter::ITextControl* mOwnIp = nullptr;
   transmitter::TextControl* mDirectPeer = nullptr;
   void switchTab(bool directTab);
+  void connect(bool keepId);
 public:
   Transmitter(const iplug::InstanceInfo& info);
   ~Transmitter();

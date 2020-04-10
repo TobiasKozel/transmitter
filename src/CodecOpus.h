@@ -10,11 +10,12 @@ namespace transmitter {
     OpusEncoder* mEncoder = nullptr; // The encoder itself
     float mInterleaved[2880 * 2]; // Max opus frame size at 48kHz
     float mPreInterleave[2880];
-    int mPacketSize = 0; // The actual size of the packet
+    
     int mFrameSize = 480; // The size of the blocks handed over to the encoder
   public:
 
     WrappedOpusEncoder() {
+      strcpy(mName, "OPUS");
       int err;
       /**
        * We'll always use 2 channels at 48000kHz
@@ -29,34 +30,6 @@ namespace transmitter {
 
     ~WrappedOpusEncoder() {
       opus_encoder_destroy(mEncoder);
-    }
-
-    void pushSamples(float** samples, int count) override {
-      mBuffer[0].add(samples[0], count);
-      mBuffer[1].add(samples[1], count);
-      if (mFrameSize >= mBuffer[0].inBuffer()) {
-        for (int c = 0; c < 2; c++) {
-          mBuffer[c].get(mPreInterleave, mFrameSize);
-          for (int i = c, s = 0; s < mFrameSize; i += 2, s++) {
-            mInterleaved[i] = mPreInterleave[s]; // interleave the signal
-          }
-        }
-        mPacketSize = opus_encode_float(mEncoder, mInterleaved, mFrameSize, mPacket, MAX_PACKET_SIZE);
-        if (mPacketSize < 0) {
-          assert(false);
-        }
-      }
-    }
-
-    int popPacket(unsigned char* result) override {
-      const int size = mPacketSize;
-      if (size) {
-        memcpy(result, "OPUS", 4);
-        memcpy(result + 4, mPacket, size);
-        mPacketSize = 0;
-        return size + 4; // add the codec name
-      }
-      return 0;
     }
 
     /**
@@ -76,6 +49,26 @@ namespace transmitter {
     void changeFrameSize(int frameSize) {
       mFrameSize = frameSize;
     }
+
+  private:
+    int pushSamplesImpl(float** samples, int count, unsigned char* result) override {
+      mBuffer[0].add(samples[0], count);
+      mBuffer[1].add(samples[1], count);
+      if (mFrameSize <= mBuffer[0].inBuffer()) {
+        for (int c = 0; c < 2; c++) {
+          mBuffer[c].get(mPreInterleave, mFrameSize);
+          for (int i = c, s = 0; s < mFrameSize; i += 2, s++) {
+            mInterleaved[i] = mPreInterleave[s]; // interleave the signal
+          }
+        }
+        const int size = opus_encode_float(mEncoder, mInterleaved, mFrameSize, result, MAX_PACKET_SIZE);
+        if (size < 0) {
+          assert(false);
+        }
+        return size;
+      }
+      return 0;
+    }
   };
 
   class WrappedOpusDecoder : public DecoderBase {
@@ -90,6 +83,7 @@ namespace transmitter {
     int mBufferSize = 960;
   public:
     WrappedOpusDecoder() {
+      strcpy(mName, "OPUS");
       int err;
       mDecoder = opus_decoder_create(48000, 2, &err);
       if (err < 0) {
@@ -101,15 +95,9 @@ namespace transmitter {
       opus_decoder_destroy(mDecoder);
     }
 
-    bool compareName(const void* name) const override {
-      return strncmp("OPUS", static_cast<const char*>(name), 4) == 0;
-    }
-
-    void pushPacket(const unsigned char* data, int size) override {
-      size -= 4; // first 4 bytes are codec identification
-      if (size <= 0) { return; }
-      memcpy(mPacket, data + 4, size);
-      int frames = opus_decode_float(mDecoder, mPacket, size, mInterleaved, 2880 * 2, 0);
+  private:
+    int pushPacketImpl(const unsigned char* data, int size, float** result, int requestedSamples) override {
+      const int frames = opus_decode_float(mDecoder, data, size, mInterleaved, 2880 * 2, 0);
       if (frames > 0) {
         for (int c = 0; c < 2; c++) {
           for (int i = c, s = 0; s < frames; i += 2, s++) {
@@ -118,9 +106,7 @@ namespace transmitter {
           mBuffer[c].add(mPostInterleave, frames);
         }
       }
-    }
 
-    int popSamples(float** result, int size) override {
       if (mBuffer[0].inBuffer() >= size) {
         for (int c = 0; c < 2; c++) {
           mBuffer[c].get(result[c], size);

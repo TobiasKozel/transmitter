@@ -34,7 +34,6 @@ namespace transmitter {
   typedef iplug::igraphics::EDirection EDirection;
   typedef iplug::igraphics::IMouseMod IMouseMod;
   typedef iplug::igraphics::IVStyle IVStyle;
-  typedef iplug::IKeyPress IKeyPress;
   typedef iplug::igraphics::IPopupMenu IPopupMenu;
   const IVStyle DEFAULT_STYLE = IVStyle();
 }

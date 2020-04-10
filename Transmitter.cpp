@@ -11,13 +11,18 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
   if (netlib_init() == -1) {
     assert(false); // Well no point in doing any of this without networking
   }
+
+  /**
+   * Setup the controls
+   */
   GetParam(kVolume)->InitGain("Volume own");
   GetParam(kVolumeRemote)->InitGain("Volume remote");
   GetParam(kBitRate)->InitDouble("Bitrate", 128, 1, 512, 0.1, "kBit/s");
-  GetParam(kComplexity)->InitDouble("Complexity", 10, 0, 10, 1);
-  GetParam(kPacketLoss)->InitPercentage("Expected packet loss");
-  GetParam(kBufferSize)->InitDouble("Buffer Size", 960, 1, 10000, 1);
-  GetParam(kFrameSize)->InitEnum("Frame Size", 1, 4, "Samples", iplug::IParam::kFlagsNone, "", "120", "240", "480", "960", "1920", "2880");
+  GetParam(kComplexity)->InitDouble("OPUS Complexity", 10, 0, 10, 1);
+  GetParam(kPacketLoss)->InitPercentage("OPUS Expected packet loss");
+  GetParam(kBufferSize)->InitDouble("Receive Buffer Size", 960, 1, 10000, 1);
+  GetParam(kFrameSize)->InitEnum("OPUS Frame Size", 1, 4, "Samples", iplug::IParam::kFlagsNone, "", "120", "240", "480", "960", "1920", "2880");
+
 #if IPLUG_EDITOR // http://bit.ly/2S64BDd
   mMakeGraphicsFunc = [&]() {
     return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS, 1.);
@@ -29,6 +34,26 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     pGraphics->AttachPanelBackground(style::BACKGROUND);
     pGraphics->AttachTextEntryControl();
     // pGraphics->AttachPopupMenuControl();
+
+    mGraphics->SetKeyHandlerFunc([&](const IKeyPress& key, const bool isUp) {
+      if (!isUp) { // Only handle key down
+        if (key.S) { // Check modifiers like shift first
+          if (key.VK == iplug::kVK_C) {
+            mGraphics->SetTextInClipboard(mMasterId->GetStr());
+            return true;
+          }
+          if (key.VK == iplug::kVK_V) {
+            WDL_String data;
+            mGraphics->GetTextFromClipboard(data);
+            mMasterServer->SetLabelStr(data.Get());
+            connect(true);
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+
     pGraphics->LoadFont("Roboto-Regular", ROBOTO_FN);
     IRECT b = pGraphics->GetBounds();
     b.B = style::TAB_BAR_HEIGHT;
@@ -58,7 +83,7 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     b.B += 150;
     IRECT left = b.GetReducedFromRight(style::BUTTON_WIDTH);
     IRECT right = b.GetFromRight(style::BUTTON_WIDTH);
-    mMasterServer = new TextControl(left.SubRectVertical(3, 0), [&](IControl* pCaller) {
+    mMasterServer = new TextControl(left.SubRectVertical(2, 0), [&](IControl* pCaller) {
       ::SplashClickActionFunc(pCaller);
       TextControl* c = dynamic_cast<TextControl*>(pCaller);
       if (c == nullptr) { return; }
@@ -69,38 +94,18 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     }, DEFAULT_MASTER_SERVER);
     mMainTab.Add(mMasterServer);
 
-    mMainTab.Add(new IVButtonControl(right.SubRectVertical(3, 0), [&](IControl* pCaller) {
+    mMainTab.Add(new IVButtonControl(right.SubRectVertical(2, 0), [&](IControl* pCaller) {
       ::SplashClickActionFunc(pCaller);
-      std::string id;
-      if (mMSession != nullptr) {
-        id = mMSession->getId();
-        delete mMSession;
-        mMSession = nullptr;
-      }
-      mMSession = new MasterServerSession(mMasterServer->GetLabelString(), id);
-      mMasterId->SetStr(mMSession->getOwnAddress());
+      connect(true);
     }, "Connect"));
 
-    mMasterId = new ITextControl(b.SubRectVertical(3, 1), "Connect first to receive an ID.");
+    mMasterId = new ITextControl(left.SubRectVertical(2, 1), "Connect first to receive an ID.");
     mMainTab.Add(mMasterId);
 
-    
-
-    //mMasterPeer = new TextControl(left.SubRectVertical(3, 2), [&](IControl* pCaller) {
-    //  ::SplashClickActionFunc(pCaller);
-    //  TextControl* c = dynamic_cast<TextControl*>(pCaller);
-    //  if (c == nullptr) { return; }
-    //  c->callback = [&](const char* host) {
-    //    return host;
-    //  };
-    //  GetUI()->CreateTextEntry(*pCaller, IText(20.f), pCaller->GetRECT(), "MasterPeerPopup");
-    //}, "MasterPeer");
-    //mMainTab.Add(mMasterPeer);
-
-    //mMainTab.Add(new IVButtonControl(right.SubRectVertical(3, 2), [&](IControl* pCaller) {
-    //  ::SplashClickActionFunc(pCaller);
-    //}, "Connect Peer"));
-
+    mMainTab.Add(new IVButtonControl(right.SubRectVertical(2, 1), [&](IControl* pCaller) {
+      ::SplashClickActionFunc(pCaller);
+      connect(false);
+    }, "get new ID"));
 
     /**
      * Direct connection tab controls
@@ -187,6 +192,21 @@ Transmitter::~Transmitter() {
   netlib_quit();
 }
 
+void Transmitter::connect(bool keepId) {
+  std::string id;
+  if (mMSession != nullptr) {
+    id = mMSession->getId();
+    delete mMSession;
+    mMSession = nullptr;
+  }
+  mMSession = new MasterServerSession(mMasterServer->GetLabelString(), keepId ? id : "");
+  if (mMSession->getError()) {
+    mMasterId->SetStr("Couldn't connect to the Masterserver!");
+  } else {
+    mMasterId->SetStr(mMSession->getOwnAddress());
+  }
+}
+
 void Transmitter::switchTab(bool directTab) {
   for (int i = 0; i < mDirectTab.GetSize(); i++) {
     mDirectTab.Get(i)->Hide(!directTab);
@@ -227,10 +247,25 @@ void Transmitter::OnUIClose() {
 #if IPLUG_DSP
 void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   const int nChans = NOutChansConnected();
+  const sample volOwn = DBToAmp(GetParam(kVolume)->Value());
+  const sample volRemote = DBToAmp(GetParam(kVolumeRemote)->Value());
+
+  if (mMSession != nullptr) {
+    mMSession->ProcessBlock(inputs, outputs, nFrames);
+  } else {
+    for (int i = 0; i < nFrames; i++) {
+      for (int c = 0; c < nChans; c++) {
+        outputs[c][i] = 0;
+      }
+    }
+  }
+
+  /**
+   * Add the original audio input back and adjust the volumes
+   */
   for (int i = 0; i < nFrames; i++) {
     for (int c = 0; c < nChans; c++) {
-      // outputs[c][i] += inputs[c][i]; // Add the old signal on top
-      outputs[c][i] = 0;
+      outputs[c][i] = outputs[c][i] * volRemote + inputs[c][i] * volOwn;
     }
   }
 }

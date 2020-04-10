@@ -30,7 +30,7 @@ namespace transmitter {
 
     AudioCommunicator* mCommunicator = nullptr;
 
-    bool mReady = false;
+    bool mError = true;
   public:
     MasterServerSession(std::string masterServer, std::string ownId = "") {
       URLParser url(masterServer);
@@ -86,7 +86,7 @@ namespace transmitter {
 
       mOwnAddress = url.reconstruct(true, false, false) + "/" + mId;
 
-      mReady = true;
+      mError = false;
 
       connectAsListener(url.path);
     }
@@ -101,7 +101,7 @@ namespace transmitter {
       if (idIndex != std::string::npos) {
         id = id.substr(idIndex);
       }
-      if (id.size() < 4 && false) {
+      if (id.size() < 1) {
         mPeer = "";
         return false; // We'll only consider IDs longer than 4 characters valid
       }
@@ -128,6 +128,14 @@ namespace transmitter {
       return mOwnAddress.c_str();
     }
 
-  };
+    bool getError() const {
+      return mError;
+    }
 
+    void ProcessBlock(sample** inputs, sample** outputs, int nFrames) const {
+      if (mCommunicator != nullptr) {
+        mCommunicator->ProcessBlock(inputs, outputs, nFrames);
+      }
+    }
+  };
 }

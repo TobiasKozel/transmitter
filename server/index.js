@@ -36,7 +36,7 @@ const UTIL = {
 	* Will simply return a unique id
 	*/
 	generateId: function () {
-		if (tempId == 2) tempId = 1;
+		// if (tempId == 2) tempId = 1;
 		return "!" + (tempId++);
 	},
 	ipFromReq: function(req) {
@@ -104,20 +104,22 @@ let clients = [];
 let connections = [];
 
 function handleOpusPacket(packet, port, address) {
-	for (let i of clients) {
-		if (i.ip === address && i.port === port) {
-			i.timeOut = 0;
-			for (let j of connections) {
-				if (j.from === i) {
-					j.to.timeOut = 0;
-					if (to.webSocket) {
+	for (let from of clients) {
+		if (from.ip === address && from.port === port) {
+			// Found out who sent the packet
+			from.timeOut = 0;
+			// Figure out who is connected to it as a listener
+			for (let connection of connections) {
+				if (connection.from === from) {
+					connection.to.timeOut = 0;
+					if (connection.to.webSocket) {
 						// todo
 					} else {
-						udp4.send(packet, to.port, to.ip);
+						udp4.send(packet, connection.to.port, connection.to.ip);
 					}
 				}
 			}
-			debugger;
+			// debugger;
 			break;
 		}
 	}
@@ -132,6 +134,13 @@ function handleOpusPacket(packet, port, address) {
  * @returns {string} Will return the client has
  */
 function registerClient(port, ip, id) {
+	try {
+		port = parseInt(port, 10);
+	} catch (error) {
+		UTIL.log("Register: Failed to parsed Port " + ip + " id " + id + " port " + port);
+		return;
+	}
+	
 	if (ip === "::ffff:127.0.0.1" || ip === "::1") {
 		ip = "127.0.0.1"; // ipv6 is confusing
 	}
@@ -152,10 +161,10 @@ function registerClient(port, ip, id) {
 
 /**
  * Will add a listener to the client from selfIf
- * @param {string} selfId Id from the broadcasting client
- * @param {string} peerId Id from the listener client
+ * @param {string} selfId Id from the listener
+ * @param {string} peerId Id of the client the listener wants to listen to
  */
-function addListener(selfId, peerId) {
+function startListenTo(selfId, peerId) {
 	let self;
 	let peer;
 	// find the actual objects
@@ -168,20 +177,20 @@ function addListener(selfId, peerId) {
 		}
 	}
 
-	if (self && peer) {
+	if (self && peer && self !== peer) {
 		/**
 		 * A listener can only listen to one stream
 		 * So we'll get rid of any old connections which have
 		 * the target as a listener
 		 */
 		for (let i of connections) {
-			if (i.to === i) {
+			if (i.to === self) {
 				connections = UTIL.removeFromArray(connections, i);
 			}
 		}
 
-		connections.push(new Connection(self, peer));
-		UTIL.log("Added listener " + peer.id + " to " + self.id);
+		connections.push(new Connection(peer, self));
+		UTIL.log("Added listener " + self.id + " to " + peer.id);
 		return true;
 	}
 	return false;
@@ -194,8 +203,8 @@ function addListener(selfId, peerId) {
  */
 function connectClients(selfId, peerId) {
 	let success = true;
-	success = success && addListener(selfId, peerId);
-	success = success && addListener(peerId, selfId);
+	success = success && startListenTo(selfId, peerId);
+	success = success && startListenTo(peerId, selfId);
 	return success;
 }
 
@@ -252,7 +261,7 @@ const handleAPIRequest = function(req, res) {
 	 */
 	if ("/connect_as_listener" === pathname) {
 		response.type = "connection_result";
-		response.success = addListener(parsed.query["peer"], parsed.query["id"]);
+		response.success = startListenTo(parsed.query["id"], parsed.query["peer"]);
 	}
 
 	/**
