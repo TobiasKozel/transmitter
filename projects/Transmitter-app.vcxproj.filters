@@ -333,7 +333,10 @@
     <ClInclude Include="..\src\MasterServerSession.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UrlParser.h">
+    <ClInclude Include="..\src\CodecVBAN.h">
+      <Filter>src\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\URLParser.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

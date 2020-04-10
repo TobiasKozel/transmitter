@@ -1,4 +1,5 @@
 #include "Transmitter.h"
+using namespace iplug;
 #include "IPlug_include_in_plug_src.h"
 #include "IControls.h"
 #include "./thirdparty/json.hpp"
@@ -6,7 +7,6 @@
 #include "../thirdparty/netlib/src/netlib.h"
 
 using namespace transmitter;
-
 Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, iplug::MakeConfig(kNumParams, kNumPrograms)) {
   if (netlib_init() == -1) {
     assert(false); // Well no point in doing any of this without networking
@@ -17,7 +17,7 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
   GetParam(kComplexity)->InitDouble("Complexity", 10, 0, 10, 1);
   GetParam(kPacketLoss)->InitPercentage("Expected packet loss");
   GetParam(kBufferSize)->InitDouble("Buffer Size", 960, 1, 10000, 1);
-  GetParam(kFrameSize)->InitEnum("Frame Size", 1, 4, "Samples", IParam::kFlagsNone, "", "120", "240", "480", "960", "1920", "2880");
+  GetParam(kFrameSize)->InitEnum("Frame Size", 1, 4, "Samples", iplug::IParam::kFlagsNone, "", "120", "240", "480", "960", "1920", "2880");
 #if IPLUG_EDITOR // http://bit.ly/2S64BDd
   mMakeGraphicsFunc = [&]() {
     return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS, 1.);
@@ -71,25 +71,35 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
 
     mMainTab.Add(new IVButtonControl(right.SubRectVertical(3, 0), [&](IControl* pCaller) {
       ::SplashClickActionFunc(pCaller);
-    }, "Connect Masterserver"));
+      std::string id;
+      if (mMSession != nullptr) {
+        id = mMSession->getId();
+        delete mMSession;
+        mMSession = nullptr;
+      }
+      mMSession = new MasterServerSession(mMasterServer->GetLabelString(), id);
+      mMasterId->SetStr(mMSession->getOwnAddress());
+    }, "Connect"));
 
     mMasterId = new ITextControl(b.SubRectVertical(3, 1), "Connect first to receive an ID.");
     mMainTab.Add(mMasterId);
 
-    mMasterPeer = new TextControl(left.SubRectVertical(3, 2), [&](IControl* pCaller) {
-      ::SplashClickActionFunc(pCaller);
-      TextControl* c = dynamic_cast<TextControl*>(pCaller);
-      if (c == nullptr) { return; }
-      c->callback = [&](const char* host) {
-        return host;
-      };
-      GetUI()->CreateTextEntry(*pCaller, IText(20.f), pCaller->GetRECT(), "MasterPeerPopup");
-    }, "MasterPeer");
-    mMainTab.Add(mMasterPeer);
+    
 
-    mMainTab.Add(new IVButtonControl(right.SubRectVertical(3, 2), [&](IControl* pCaller) {
-      ::SplashClickActionFunc(pCaller);
-    }, "Connect Peer"));
+    //mMasterPeer = new TextControl(left.SubRectVertical(3, 2), [&](IControl* pCaller) {
+    //  ::SplashClickActionFunc(pCaller);
+    //  TextControl* c = dynamic_cast<TextControl*>(pCaller);
+    //  if (c == nullptr) { return; }
+    //  c->callback = [&](const char* host) {
+    //    return host;
+    //  };
+    //  GetUI()->CreateTextEntry(*pCaller, IText(20.f), pCaller->GetRECT(), "MasterPeerPopup");
+    //}, "MasterPeer");
+    //mMainTab.Add(mMasterPeer);
+
+    //mMainTab.Add(new IVButtonControl(right.SubRectVertical(3, 2), [&](IControl* pCaller) {
+    //  ::SplashClickActionFunc(pCaller);
+    //}, "Connect Peer"));
 
 
     /**

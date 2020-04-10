@@ -10,13 +10,13 @@ namespace transmitter {
  * Ripped from. Pimped slightly to also output port and validity
  * https://stackoverflow.com/a/2616217
  */
-  struct UrlParser {
-    std::string protocol, host, path, query, full;
+  struct URLParser {
+    std::string protocol, host, path, query;
     int port = 0;
     bool ssl = false;
     bool valid = false;
     bool nonDefaultPort = false;
-    UrlParser(const std::string& url_s) {
+    URLParser(const std::string& url_s) {
       const std::string prot_end("://");
       std::string::const_iterator prot_i = search(url_s.begin(), url_s.end(),
         prot_end.begin(), prot_end.end()
@@ -73,18 +73,27 @@ namespace transmitter {
       }
       query.assign(query_i, url_s.end());
 
-      // Reassemble the url to get the display name as it was parsed
-      full = protocol + "://" + host;
-      if (nonDefaultPort) {
-        full += ":" + std::to_string(port);;
-      }
-      full += path;
-
-      if (!query.empty()) {
-        full += "?" + query;
-      }
-
       valid = true;
+    }
+
+    std::string reconstruct(bool _proto, bool _path, bool _query) const {
+      std::string ret;
+      if (_proto) {
+        ret = protocol + "://";
+      }
+      ret += host;
+
+      if (nonDefaultPort) {
+        ret += ":" + std::to_string(port);;
+      }
+
+      if (_path) {
+        ret += path;
+        if (_query && !query.empty()) {
+          ret += "?" + query;
+        }
+      }
+      return ret;
     }
   };
 }

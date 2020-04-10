@@ -8,7 +8,7 @@
 
 #include "./AudioCommunicator.h"
 
-#include "./UrlParser.h"
+#include "./URLParser.h"
 
 namespace transmitter {
   class MasterServerSession {
@@ -26,14 +26,16 @@ namespace transmitter {
     std::string mId; // The own id of the client
     std::string mPeer; // The id of the client peer we're listening to
 
+    std::string mOwnAddress; // Address shown to copy paste
+
     AudioCommunicator* mCommunicator = nullptr;
 
     bool mReady = false;
   public:
-    MasterServerSession(std::string& masterServer, std::string ownId = "") {
-      UrlParser url(masterServer);
+    MasterServerSession(std::string masterServer, std::string ownId = "") {
+      URLParser url(masterServer);
       if (!url.valid) { return; }
-      mMasterServer.displayName = url.full;
+      mMasterServer.displayName = url.reconstruct(true, true, true);
       mMasterServer.address = url.host;
       mMasterServer.apiPort = url.port;
 
@@ -78,9 +80,11 @@ namespace transmitter {
       if (res && res->status == 200) {
         nlohmann::json json = nlohmann::json::parse(res->body);
         try {
-          mId = json["id"].get<int>();
+          mId = json["id"].get<std::string>();
         } catch (...) { return; }
       } else { return; }
+
+      mOwnAddress = url.reconstruct(true, false, false) + "/" + mId;
 
       mReady = true;
 
@@ -97,7 +101,7 @@ namespace transmitter {
       if (idIndex != std::string::npos) {
         id = id.substr(idIndex);
       }
-      if (id.size() < 4) {
+      if (id.size() < 4 && false) {
         mPeer = "";
         return false; // We'll only consider IDs longer than 4 characters valid
       }
@@ -114,6 +118,14 @@ namespace transmitter {
       }
       mPeer = "";
       return false;
+    }
+
+    const char* getId() const {
+      return mId.c_str();
+    }
+
+    const char* getOwnAddress() const {
+      return mOwnAddress.c_str();
     }
 
   };

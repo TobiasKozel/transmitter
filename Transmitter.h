@@ -5,6 +5,7 @@
 #include "IControls.h"
 #include "./src/TextControl.h"
 #include "./src/TConfig.h"
+#include "./src/MasterServerSession.h"
 
 
 const int kNumPrograms = 1;
@@ -25,6 +26,7 @@ enum EParams {
 #define MASTER_SERVER "localhost:55555"
 
 class Transmitter final : public iplug::Plugin {
+  transmitter::MasterServerSession* mMSession = nullptr;
   WDL_PtrList<iplug::igraphics::IControl> mMainTab, mDirectTab;
   iplug::igraphics::IVButtonControl* mMainTabButton = nullptr, * mDirectTabButton = nullptr;
   iplug::igraphics::IGraphics* mGraphics = nullptr;
