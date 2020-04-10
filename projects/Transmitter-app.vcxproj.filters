@@ -300,12 +300,6 @@
     <ClInclude Include="..\..\..\IPlug\IPlugPluginBase.h">
       <Filter>IPlug</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\OpusWrapper.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TransmitterSession.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\thirdparty\netlib\src\netlib.h">
       <Filter>thirdparty\netlib</Filter>
     </ClInclude>
@@ -315,9 +309,6 @@
     <ClInclude Include="..\thirdparty\netlib\src\util.h">
       <Filter>thirdparty\netlib</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TransmitterState.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TextControl.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -325,6 +316,24 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\GUIStyle.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TConfig.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\CodecBase.h">
+      <Filter>src\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\CodecOpus.h">
+      <Filter>src\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\AudioCommunicator.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MasterServerSession.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UrlParser.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -367,6 +376,9 @@
     </Filter>
     <Filter Include="thirdparty\netlib">
       <UniqueIdentifier>{272a92e1-64ec-4dad-8ae6-60c9c44c0b13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\codec">
+      <UniqueIdentifier>{d5f30ff5-f587-41d2-9cea-06a2f9b4cb00}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

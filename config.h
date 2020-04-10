@@ -25,8 +25,8 @@
 #define PLUG_DOES_STATE_CHUNKS 1
 #define PLUG_HAS_UI 1
 #define PLUG_WIDTH 600
-#define PLUG_HEIGHT 600
-#define PLUG_FPS 30
+#define PLUG_HEIGHT 450
+#define PLUG_FPS 60
 #define PLUG_SHARED_RESOURCES 0
 
 #define AUV2_ENTRY Transmitter_Entry

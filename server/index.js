@@ -133,7 +133,7 @@ function handleOpusPacket(packet, port, address) {
  */
 function registerClient(port, ip, id) {
 	if (ip === "::ffff:127.0.0.1" || ip === "::1") {
-		ip = "127.0.0.1";
+		ip = "127.0.0.1"; // ipv6 is confusing
 	}
 	if (id) {
 		for (let i of clients) {
@@ -226,11 +226,16 @@ const handleAPIRequest = function(req, res) {
 	const pathname = parsed.pathname;
 	var response = { type: "not_set" };
 
+	if ("/get_udp_port" === pathname) {
+		response.type = "return_udp_port";
+		response.port = API.UDP_PORT;
+	}
+
 	/**
 	 * All clients will have to register first, even if they already have an id from some earlier session
 	 */
-	if ("/register" === pathname) {
-		response.type = "register_result";
+	if ("/get_id" === pathname) {
+		response.type = "return_id";
 		response.id = registerClient(parsed.query["port"], UTIL.ipFromReq(req), parsed.query["id"]);
 	}
 
@@ -245,7 +250,7 @@ const handleAPIRequest = function(req, res) {
 	/**
 	 * Will connect only one way which is going to be used for the web listener
 	 */
-	if ("/connect_listener" === pathname) {
+	if ("/connect_as_listener" === pathname) {
 		response.type = "connection_result";
 		response.success = addListener(parsed.query["peer"], parsed.query["id"]);
 	}

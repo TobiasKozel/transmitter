@@ -3,18 +3,21 @@
 #include "IControls.h"
 #include "./thirdparty/json.hpp"
 #include "./src/GUIStyle.h"
+#include "../thirdparty/netlib/src/netlib.h"
 
 using namespace transmitter;
 
 Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, iplug::MakeConfig(kNumParams, kNumPrograms)) {
+  if (netlib_init() == -1) {
+    assert(false); // Well no point in doing any of this without networking
+  }
   GetParam(kVolume)->InitGain("Volume own");
   GetParam(kVolumeRemote)->InitGain("Volume remote");
   GetParam(kBitRate)->InitDouble("Bitrate", 128, 1, 512, 0.1, "kBit/s");
   GetParam(kComplexity)->InitDouble("Complexity", 10, 0, 10, 1);
   GetParam(kPacketLoss)->InitPercentage("Expected packet loss");
   GetParam(kBufferSize)->InitDouble("Buffer Size", 960, 1, 10000, 1);
-  GetParam(kFrameSize)->InitEnum("Frame Size", 1, 4, "Samples", IParam::kFlagsNone, "", "120", "240", "480", "960");
-
+  GetParam(kFrameSize)->InitEnum("Frame Size", 1, 4, "Samples", IParam::kFlagsNone, "", "120", "240", "480", "960", "1920", "2880");
 #if IPLUG_EDITOR // http://bit.ly/2S64BDd
   mMakeGraphicsFunc = [&]() {
     return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS, 1.);
@@ -24,6 +27,8 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     mGraphics = pGraphics;
     pGraphics->AttachCornerResizer(iplug::igraphics::EUIResizerMode::Scale, false);
     pGraphics->AttachPanelBackground(style::BACKGROUND);
+    pGraphics->AttachTextEntryControl();
+    // pGraphics->AttachPopupMenuControl();
     pGraphics->LoadFont("Roboto-Regular", ROBOTO_FN);
     IRECT b = pGraphics->GetBounds();
     b.B = style::TAB_BAR_HEIGHT;
@@ -32,33 +37,47 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
      */
     mMainTabButton = new IVButtonControl(b.SubRectHorizontal(2, 0), [&](IControl* caller) {
       switchTab(false);
-    }, "Main Tab");
+      ::SplashClickActionFunc(caller);
+    }, "Master Server Mode");
     pGraphics->AttachControl(mMainTabButton);
     mDirectTabButton = new IVButtonControl(b.SubRectHorizontal(2, 1), [&](IControl* caller) {
       switchTab(true);
-    }, "Direct Connect");
+      ::SplashClickActionFunc(caller);
+    }, "Direct Connect Mode");
     pGraphics->AttachControl(mDirectTabButton);
+
+    b.T = b.B + style::PADDING;
+    b.B += 30;
+
+    pGraphics->AttachControl(new ITextControl(b, "Connection settings"));
 
     /**
      * Main tab controls
      */
-    b.T = b.B;
-    b.B += 300;
-
-    mMasterServer = new TextControl(b.SubRectVertical(3, 0), [&](IControl* pCaller) {
+    b.T = b.B + style::PADDING;
+    b.B += 150;
+    IRECT left = b.GetReducedFromRight(style::BUTTON_WIDTH);
+    IRECT right = b.GetFromRight(style::BUTTON_WIDTH);
+    mMasterServer = new TextControl(left.SubRectVertical(3, 0), [&](IControl* pCaller) {
+      ::SplashClickActionFunc(pCaller);
       TextControl* c = dynamic_cast<TextControl*>(pCaller);
       if (c == nullptr) { return; }
       c->callback = [&](const char* host) {
         return host;
       };
-      GetUI()->CreateTextEntry(*pCaller, IText(20.f), pCaller->GetRECT(), "MasterSeverPopup");
-    }, "MasterSever");
+      GetUI()->CreateTextEntry(*pCaller, IText(20.f), pCaller->GetRECT(), c->GetLabelString());
+    }, DEFAULT_MASTER_SERVER);
     mMainTab.Add(mMasterServer);
 
-    mMasterId = new ITextControl(b.SubRectVertical(3, 1), "MasterOwnID");
+    mMainTab.Add(new IVButtonControl(right.SubRectVertical(3, 0), [&](IControl* pCaller) {
+      ::SplashClickActionFunc(pCaller);
+    }, "Connect Masterserver"));
+
+    mMasterId = new ITextControl(b.SubRectVertical(3, 1), "Connect first to receive an ID.");
     mMainTab.Add(mMasterId);
 
-    mMasterPeer = new TextControl(b.SubRectVertical(3, 2), [&](IControl* pCaller) {
+    mMasterPeer = new TextControl(left.SubRectVertical(3, 2), [&](IControl* pCaller) {
+      ::SplashClickActionFunc(pCaller);
       TextControl* c = dynamic_cast<TextControl*>(pCaller);
       if (c == nullptr) { return; }
       c->callback = [&](const char* host) {
@@ -68,6 +87,10 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     }, "MasterPeer");
     mMainTab.Add(mMasterPeer);
 
+    mMainTab.Add(new IVButtonControl(right.SubRectVertical(3, 2), [&](IControl* pCaller) {
+      ::SplashClickActionFunc(pCaller);
+    }, "Connect Peer"));
+
 
     /**
      * Direct connection tab controls
@@ -76,7 +99,8 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     mOwnIp = new ITextControl(b.SubRectVertical(2, 0), "OwnIP");
     mDirectTab.Add(mOwnIp);
 
-    mDirectPeer = new TextControl(b.SubRectVertical(2, 1), [&](IControl* pCaller) {
+    mDirectPeer = new TextControl(left.SubRectVertical(2, 1), [&](IControl* pCaller) {
+      ::SplashClickActionFunc(pCaller);
       TextControl* c = dynamic_cast<TextControl*>(pCaller);
       if (c == nullptr) { return; }
       c->callback = [&](const char* host) {
@@ -86,7 +110,9 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     }, "DirectPeer");
     mDirectTab.Add(mDirectPeer);
 
-    
+    mDirectTab.Add(new IVButtonControl(right.SubRectVertical(2, 1), [&](IControl* pCaller) {
+      ::SplashClickActionFunc(pCaller);
+    }, "Connect Peer"));
 
     // mDirectTab.Add(new IVKnobControl())
 
@@ -104,8 +130,12 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     /**
      * General opus controls
      */
+    b.T = b.B + style::PADDING;
+    b.B += 30;
 
-    b.T = b.B;
+    pGraphics->AttachControl(new ITextControl(b, "Opus encoder settings"));
+
+    b.T = b.B + style::PADDING;
     b.B = pGraphics->GetBounds().B;
 
     const int nRows = 3;
@@ -141,6 +171,10 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
     //}
   };
 #endif
+}
+
+Transmitter::~Transmitter() {
+  netlib_quit();
 }
 
 void Transmitter::switchTab(bool directTab) {
@@ -183,8 +217,6 @@ void Transmitter::OnUIClose() {
 #if IPLUG_DSP
 void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   const int nChans = NOutChansConnected();
-  mSessionManager.pushSamples(inputs, nFrames);
-  mSessionManager.pollSamples(outputs, nFrames);
   for (int i = 0; i < nFrames; i++) {
     for (int c = 0; c < nChans; c++) {
       // outputs[c][i] += inputs[c][i]; // Add the old signal on top

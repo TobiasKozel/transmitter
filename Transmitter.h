@@ -2,9 +2,9 @@
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "../thirdparty/httplib.h" // Needs to be included here because of windows socket define bullshit
 #include "IPlug_include_in_plug_hdr.h"
-#include "./src/TransmitterSession.h"
 #include "IControls.h"
 #include "./src/TextControl.h"
+#include "./src/TConfig.h"
 
 
 const int kNumPrograms = 1;
@@ -36,7 +36,7 @@ class Transmitter final : public iplug::Plugin {
   void switchTab(bool directTab);
 public:
   Transmitter(const iplug::InstanceInfo& info);
-  transmitter::SessionManager mSessionManager;
+  ~Transmitter();
 
   void OnUIClose() override;
 

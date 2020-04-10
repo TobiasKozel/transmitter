@@ -30,6 +30,7 @@ namespace transmitter {
      * Will resize the buffer an clear it
      */
     void setSize(const int size) {
+      if (mSize == size) { return; }
       if (mBuffer != nullptr) {
         delete[] mBuffer;
         mBuffer = nullptr;

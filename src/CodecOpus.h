@@ -1,29 +1,25 @@
 #pragma once
 #include "../thirdparty/opus/include/opus.h"
-#include "../thirdparty/RingBuffer.h"
+#include "CodecBase.h"
 #include <cstring>
 #include <cassert>
 
-#define OPUS_CHANNELS 2
-#define MAX_PACKET_SIZE 4000
-#define MAX_FRAMESIZE 2880
-
 namespace transmitter {
-  class WrappedOpusEncoder {
+
+  class WrappedOpusEncoder : public EncoderBase {
     OpusEncoder* mEncoder = nullptr; // The encoder itself
-    float mInterleaved[MAX_FRAMESIZE * OPUS_CHANNELS];
-    float mPreInterleave[MAX_FRAMESIZE];
-    RingBuffer<float> mBuffer[OPUS_CHANNELS]; // The audio buffer
-    unsigned char mPacket[MAX_PACKET_SIZE]; // The encoded packet
+    float mInterleaved[2880 * 2]; // Max opus frame size at 48kHz
+    float mPreInterleave[2880];
     int mPacketSize = 0; // The actual size of the packet
     int mFrameSize = 480; // The size of the blocks handed over to the encoder
   public:
 
     WrappedOpusEncoder() {
-      mBuffer[0].setSize(MAX_FRAMESIZE);
-      mBuffer[1].setSize(MAX_FRAMESIZE);
       int err;
-      mEncoder = opus_encoder_create(48000, OPUS_CHANNELS, OPUS_APPLICATION_RESTRICTED_LOWDELAY, &err);
+      /**
+       * We'll always use 2 channels at 48000kHz
+       */
+      mEncoder = opus_encoder_create(48000, 2, OPUS_APPLICATION_RESTRICTED_LOWDELAY, &err);
       // opus_encoder_ctl(mEncoder, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_5_MS)); // TODO find out if this does anything for the latency
       opus_encoder_ctl(mEncoder, OPUS_SET_PHASE_INVERSION_DISABLED(1)); // Without this, mono sounds really bad at lower bit rates
       opus_encoder_ctl(mEncoder, OPUS_SET_BITRATE(128000)); // 128 kBit/s
@@ -35,15 +31,11 @@ namespace transmitter {
       opus_encoder_destroy(mEncoder);
     }
 
-    /**
-     * Will push samples to the buffer and encode them
-     * if the frame size is reached
-     */
-    void pushSamples(float** samples, int count) {
+    void pushSamples(float** samples, int count) override {
       mBuffer[0].add(samples[0], count);
       mBuffer[1].add(samples[1], count);
       if (mFrameSize >= mBuffer[0].inBuffer()) {
-        for (int c = 0; c < OPUS_CHANNELS; c++) {
+        for (int c = 0; c < 2; c++) {
           mBuffer[c].get(mPreInterleave, mFrameSize);
           for (int i = c, s = 0; s < mFrameSize; i += 2, s++) {
             mInterleaved[i] = mPreInterleave[s]; // interleave the signal
@@ -56,35 +48,40 @@ namespace transmitter {
       }
     }
 
-    int popPacket(unsigned char* result) {
+    int popPacket(unsigned char* result) override {
       const int size = mPacketSize;
       if (size) {
-        memcpy(result, mPacket, size);
+        memcpy(result, "OPUS", 4);
+        memcpy(result + 4, mPacket, size);
+        mPacketSize = 0;
+        return size + 4; // add the codec name
       }
-      mPacketSize = 0;
-      return size;
+      return 0;
     }
 
     /**
      * Change the encoder bit rate in bits up to 512000
      */
-    void changeBitRate(int rate) {
+    void changeBitRate(int rate) const {
       opus_encoder_ctl(mEncoder, OPUS_SET_BITRATE(rate));
     }
 
     /**
      * Change the expected packet loss from 0-100 %
      */
-    void changePacketLoss(int loss) {
+    void changePacketLoss(int loss) const {
       opus_encoder_ctl(mEncoder, OPUS_SET_PACKET_LOSS_PERC(loss));
+    }
+
+    void changeFrameSize(int frameSize) {
+      mFrameSize = frameSize;
     }
   };
 
-  class WrappedOpusDecoder {
+  class WrappedOpusDecoder : public DecoderBase {
     OpusDecoder* mDecoder;
-    float mInterleaved[MAX_FRAMESIZE * OPUS_CHANNELS]; // Interleaved buffer to encode data
-    float mPostInterleave[MAX_FRAMESIZE]; // Buffer to use for interleaving
-    RingBuffer<float> mBuffer[OPUS_CHANNELS];
+    float mInterleaved[2880 * 2]; // Interleaved buffer to encode data
+    float mPostInterleave[2880]; // Buffer to use for interleaving
     /**
      * This is the local buffer. The opus decoder will not always
      * produce samples if the packets arrive in the wrong order.
@@ -94,22 +91,27 @@ namespace transmitter {
   public:
     WrappedOpusDecoder() {
       int err;
-      mDecoder = opus_decoder_create(48000, OPUS_CHANNELS, &err);
+      mDecoder = opus_decoder_create(48000, 2, &err);
       if (err < 0) {
         assert(false);
       }
-      mBuffer[0].setSize(mBufferSize);
-      mBuffer[1].setSize(mBufferSize);
     }
 
     ~WrappedOpusDecoder() {
       opus_decoder_destroy(mDecoder);
     }
 
-    void pushPacket(const unsigned char* data, int size) {
-      int frames = opus_decode_float(mDecoder, data, size, mInterleaved, MAX_FRAMESIZE, 0);
+    bool compareName(const void* name) const override {
+      return strncmp("OPUS", static_cast<const char*>(name), 4) == 0;
+    }
+
+    void pushPacket(const unsigned char* data, int size) override {
+      size -= 4; // first 4 bytes are codec identification
+      if (size <= 0) { return; }
+      memcpy(mPacket, data + 4, size);
+      int frames = opus_decode_float(mDecoder, mPacket, size, mInterleaved, 2880 * 2, 0);
       if (frames > 0) {
-        for (int c = 0; c < OPUS_CHANNELS; c++) {
+        for (int c = 0; c < 2; c++) {
           for (int i = c, s = 0; s < frames; i += 2, s++) {
             mPostInterleave[s] = mInterleaved[i];
           }
@@ -118,25 +120,14 @@ namespace transmitter {
       }
     }
 
-    /**
-     * This function will provide the requested samples, or silence if 
-     * not enough samples are available
-     */
-    void popSamplesOrSilence(float** result, int size) {
+    int popSamples(float** result, int size) override {
       if (mBuffer[0].inBuffer() >= size) {
-        for (int c = 0; c < OPUS_CHANNELS; c++) {
+        for (int c = 0; c < 2; c++) {
           mBuffer[c].get(result[c], size);
         }
+        return size;
       }
-      else {
-        for (int c = 0; c < OPUS_CHANNELS; c++) {
-          for (int i = 0; i < size; i++) {
-            result[c][i] = 0; // output silence if there's nothing decoded
-          }
-        }
-      }
+      return 0;
     }
-
-
   };
 }

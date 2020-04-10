@@ -11,5 +11,9 @@ namespace transmitter {
       const char* res = callback(str);
       mLabelStr.Set(res);
     }
+
+    const char* GetLabelString() {
+      return mLabelStr.Get();
+    }
   };
 }
