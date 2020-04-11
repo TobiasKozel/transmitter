@@ -47,7 +47,6 @@ testem.log
 .DS_Store
 Thumbs.db
 package-lock.json
-/package.json
 src/app/app.module.ts
 src/app/classes/stereoBuffer.ts
 src/app/components/listener/listener.component.html
