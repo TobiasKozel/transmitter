@@ -1,0 +1,16 @@
+.sideBySide {
+    display: flex;
+    widows: 100%;
+}
+
+.sliders {
+    width: 100%;
+}
+
+.bufferSettings {
+    flex-grow: 1;
+}
+
+.bufferStats {
+    min-width: 200px;
+}

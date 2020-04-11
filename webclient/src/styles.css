@@ -1,0 +1,28 @@
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.icon_spacer {
+    margin-right: 10px;
+}
+
+.tab_content {
+    margin-top: 10px;
+}
+
+.wss_address_input {
+    margin-right: 10px;
+    width: 80%;
+    margin-bottom: -5px;
+}
+
+.connectButton {
+    width: calc(20% - 15px);
+}
+
+.panel {
+    background-color: #DDD;
+    margin: 5px;
+    padding: 10px;
+}

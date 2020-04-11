@@ -1,0 +1,127 @@
+<div class="tab_content">
+    <div class="panel">
+        <div>
+            <mat-form-field class="wss_address_input">
+                <input matInput placeholder="WSS Address" [(ngModel)]="encoder.wssAddress" class="wssInput">
+            </mat-form-field>
+            <button color="primary" *ngIf="encoder.isClosed()"
+                    mat-raised-button (click)="encoder.connect()" class="connectButton">
+                Connect
+            </button>
+            <button color="warn" *ngIf="encoder.isIntermediate()"
+                    mat-raised-button disabled="true" class="connectButton">
+                ...
+            </button>
+            <button color="warn" *ngIf="encoder.isConnected()"
+                    mat-raised-button (click)="encoder.disconnect()" class="connectButton">
+                Disconnect
+            </button>
+            <br>
+            <ng-container *ngIf="encoder.error !== ''">
+                {{ encoder.error }}
+            </ng-container>
+        </div>
+    </div>
+    <div class="sideBySide">
+        <div class="panel">
+            <mat-form-field>
+                <mat-label>Input device</mat-label>
+                <mat-select (click)="queryAudioDevices(deviceSelect)" [value]="activeDeviceInfo"
+                        (selectionChange)="inputDeviceChanged($event)" #deviceSelect>
+                    <mat-option *ngFor="let in of inputDevices" [value]="in">
+                        <ng-container *ngIf="in.label"> {{ in.label }} </ng-container>
+                        <ng-container *ngIf="!in.label"> {{ in.deviceId }} </ng-container>
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <br>
+            <mat-checkbox [(ngModel)]="echoCancellation">Echo cancellation</mat-checkbox>
+            <br>
+            <mat-checkbox [(ngModel)]="autoGainControl">Auto gain controll</mat-checkbox>
+            <br>
+            <mat-checkbox [(ngModel)]="noiseSuppression">Noise supression</mat-checkbox>
+            <br>
+            <br>
+            <mat-form-field>
+                <mat-select placeholder="Buffersize" [(ngModel)]="bufferSize">
+                    <mat-option *ngFor="let i of bufferSizeOptions" [value]="i">
+                        {{ i }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <br>
+            <ng-container *ngIf="infoSampleRate">
+                {{ infoSampleRate }}Hz
+                <br>
+            </ng-container>
+            <button color="primary" [disabled]="!activeDeviceInfo"
+                    mat-raised-button (click)="openDevice()" class="wideButton">
+                Apply
+            </button>
+
+        </div>
+        <div *ngIf="opus.ready" class="panel encoderSettings">
+            <h3>Encoder Settings:</h3>
+            Bitrate {{ opus.bitrate / 1000 }} kbit/s
+            <br>
+            <mat-slider class="sliders" min="1" max="256000" step="100" [value]="opus.bitrate"
+                    (input)="opus.setBitrate($event.value)"></mat-slider>
+            <br>
+            Complexity {{ opus.complexity }}
+            <br>
+            <mat-slider class="sliders" min="1" max="10" step="1" [value]="opus.complexity"
+                    (input)="opus.setComplexity($event.value)"></mat-slider>
+            <br>
+
+            Expected packet loss {{ opus.packetLossPerc }}%
+            <br>
+            <mat-slider class="sliders" min="0" max="100" step="1" [value]="opus.packetLossPerc"
+                    (input)="opus.setPacketLossPerc($event.value)"></mat-slider>
+            <br>
+            
+            <br>
+            <mat-checkbox [checked]="opus.dtx" (change)="opus.setDtx($event.checked)">
+                Don't transmit silence
+            </mat-checkbox>
+            <div *ngIf="opus.dtx">
+                <br>
+                Silence threshold {{ opus.lsbDepth }} bits
+                <br>
+                <mat-slider class="sliders" min="1" max="24" step="1" [value]="opus.lsbDepth"
+                        (input)="opus.setLsbDepth($event.value)">
+                    
+                </mat-slider>
+            </div>
+            <br>
+            <mat-checkbox [checked]="opus.noPhaseInversion" (change)="opus.setNoPhaseInversion($event.checked)">
+                Disable phase inversion
+            </mat-checkbox>
+            <br>
+            <br>
+            <mat-form-field>
+                <mat-select placeholder="Framesize" [(ngModel)]="encoder.frameSize">
+                    <mat-option *ngFor="let i of encoder.bufferSizeOptions" [value]="i">
+                        {{ i }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+
+        <div class="panel bufferStats" *ngIf="audioContext && recordingBuffer">
+            <app-buffer-info [sampleRate]="audioContext.sampleRate" [buffer]="recordingBuffer">
+            </app-buffer-info>
+        </div>
+    </div>
+
+    <div class="panel">
+            VU Meter
+    </div>
+
+    <div class="panel">
+        <button color="primary" [disabled]="!activeDeviceInfo"
+                mat-raised-button (click)="openDevice()" class="wideButton">
+            Stream
+        </button>
+    </div>
+    
+</div>
