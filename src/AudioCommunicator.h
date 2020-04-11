@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../thirdparty/netlib/src/netlib.h"
-#include "./CodecOpus.h"
+
 #include <string>
+#include "./Types.h"
+#include "./MultiCodec.h"
 
 namespace transmitter {
   /**
@@ -10,22 +12,12 @@ namespace transmitter {
    * doesn't care about sessions or whatnot and has it's own udp socket
    */
   class AudioCommunicator {
-
-    WrappedOpusDecoder mOpusDecoder;
-    WrappedOpusEncoder mOpusEncoder;
-
-    DecoderBase* mActiveDecoder = nullptr;
-    EncoderBase* mActiveEncoder = nullptr;
-
+    MultiCodec mCodec;
     udp_socket mSocket = nullptr;
     udp_packet* mPacket = nullptr;
     ip_address mAddress = { 0, 0 }; // Address to send the packets to
     int mLocalPort = 0;
     bool mUdpReady = false; // Means the socket can send and receive data
-
-
-    const int mChannels = 2; // No idea if this will ever change
-    int mBufferSize = 2048;
     TRANSMITTER_NO_COPY(AudioCommunicator)
   public:
     AudioCommunicator(const std::string& address, const int remotePort, const int localPort = 0) {
@@ -43,7 +35,8 @@ namespace transmitter {
         mUdpReady = true;
       }
 
-      setEncoder(mOpusDecoder.getName());
+      // mCodec.setEncoder("OPUS");
+      mCodec.setEncoder("RAWC");
     }
 
     ~AudioCommunicator() {
@@ -57,56 +50,29 @@ namespace transmitter {
       /**
        * Encode the input
        */
-      if (mUdpReady || mActiveEncoder != nullptr) {
-        mPacket->len = mActiveEncoder->pushSamples(inputs, nFrames, mPacket->data);
+      if (mUdpReady) {
+        memset(mPacket->data, 0, MAX_PACKET_SIZE);
+        mPacket->len = mCodec.encode(inputs, nFrames, mPacket->data);
 
         if (mPacket->len > MAX_PACKET_SIZE) {
           assert(false);
         }
+
         if (mPacket->len > 0) {
           mPacket->address.host = mAddress.host; // These are both in big endian
           mPacket->address.port = mAddress.port; // These are both in big endian
-          netlib_udp_send(mSocket, -1, mPacket);
+          // netlib_udp_send(mSocket, -1, mPacket);
         }
       }
 
       /**
        * Decode the remote packets
        */
-      int out = 0;
       if (mUdpReady) {
-        while (netlib_udp_recv(mSocket, mPacket))
+        // while (netlib_udp_recv(mSocket, mPacket))
         { // we might have a few packets queued
-          if (mActiveDecoder != nullptr && mActiveDecoder->compareName(mPacket->data)) {
-            out = mActiveDecoder->pushPacket(mPacket->data, mPacket->len, outputs, nFrames);
-          } else {
-            /**
-             * Check against the available decoders and load the right one
-             */
-            if (mOpusDecoder.compareName(mPacket->data)) {
-              mActiveDecoder = &mOpusDecoder;
-            }
-          }
+          mCodec.decode(mPacket->data, mPacket->len, outputs, nFrames);
         }
-      }
-
-      for (int i = out; i < nFrames; i++) {
-        for (int c = 0; c < mChannels; c++) {
-          outputs[c][i] = 0; // output silence if there's nothing decoded
-        }
-      }
-    }
-
-    void setBufferSize(const int size) {
-      mBufferSize = size;
-      if (mActiveDecoder != nullptr) {
-        mActiveDecoder->resizeBuffer(size);
-      }
-    }
-
-    void setEncoder(const char* name) {
-      if (mOpusEncoder.compareName(name)) {
-        mActiveEncoder = &mOpusEncoder;
       }
     }
 

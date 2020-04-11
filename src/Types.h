@@ -5,6 +5,8 @@
 #include "IGraphicsStructs.h"
 
 namespace transmitter {
+  const int MAX_PACKET_SIZE = 1464; // We'll just go with the max udp packet size without fragmentation
+
   typedef iplug::sample sample;
   typedef iplug::igraphics::IGraphics IGraphics;
   typedef iplug::igraphics::IControl IControl;

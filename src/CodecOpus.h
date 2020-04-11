@@ -10,8 +10,7 @@ namespace transmitter {
     OpusEncoder* mEncoder = nullptr; // The encoder itself
     float mInterleaved[2880 * 2] = { 0 }; // Max opus frame size at 48kHz
     float mPreInterleave[2880] = { 0 };
-    
-    int mFrameSize = 480; // The size of the blocks handed over to the encoder
+    int mFrameSize = 240; // The size of the blocks handed over to the encoder
   public:
     WrappedOpusEncoder() {
       strcpy(mName, "OPUS");
@@ -21,9 +20,9 @@ namespace transmitter {
        */
       mEncoder = opus_encoder_create(48000, 2, OPUS_APPLICATION_RESTRICTED_LOWDELAY, &err);
       // opus_encoder_ctl(mEncoder, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_5_MS)); // TODO find out if this does anything for the latency
-      opus_encoder_ctl(mEncoder, OPUS_SET_PHASE_INVERSION_DISABLED(1)); // Without this, mono sounds really bad at lower bit rates
-      opus_encoder_ctl(mEncoder, OPUS_SET_BITRATE(128000)); // 128 kBit/s
-      opus_encoder_ctl(mEncoder, OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC));
+      //opus_encoder_ctl(mEncoder, OPUS_SET_PHASE_INVERSION_DISABLED(1)); // Without this, mono sounds really bad at lower bit rates
+      //opus_encoder_ctl(mEncoder, OPUS_SET_BITRATE(128000)); // 128 kBit/s
+      //opus_encoder_ctl(mEncoder, OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC));
       // opus_encoder_ctl(mEncoder, OPUS_SET_VBR(0)); // TODO find out if this does anything for the latency
     }
 
@@ -50,7 +49,7 @@ namespace transmitter {
     }
 
   private:
-    int pushSamplesImpl(float** samples, int count, unsigned char* result) override {
+    int encodeImpl(float** samples, int count, unsigned char* result) override {
       mBuffer[0].add(samples[0], count);
       mBuffer[1].add(samples[1], count);
       if (mFrameSize <= mBuffer[0].inBuffer()) {
@@ -100,7 +99,7 @@ namespace transmitter {
     }
 
   private:
-    int pushPacketImpl(const unsigned char* data, const int size, float** result, int requestedSamples) override {
+    int decodeImpl(const unsigned char* data, const int size, float** result, int requestedSamples) override {
       const int frames = opus_decode_float(mDecoder, data, size, mInterleaved, 2880 * 2, 0);
       if (frames > 0) {
         for (int c = 0; c < 2; c++) {
@@ -110,8 +109,9 @@ namespace transmitter {
           mBuffer[c].add(mPostInterleave, frames);
         }
       }
-
-      if (mBuffer[0].nFree() == 0 && mBuffer[0].inBuffer() >= requestedSamples) {
+      int inbuf = mBuffer[0].inBuffer();
+      iplug::DBGMSG("decode buffer %i\n", inbuf);
+      if (mBuffer[0].inBuffer() >= requestedSamples) {
         for (int c = 0; c < 2; c++) {
           mBuffer[c].get(result[c], requestedSamples);
         }

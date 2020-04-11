@@ -15,13 +15,16 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
   /**
    * Setup the controls
    */
-  GetParam(kVolume)->InitGain("Volume own");
+  GetParam(kVolume)->InitGain("Volume own", -70);
   GetParam(kVolumeRemote)->InitGain("Volume remote");
   GetParam(kBitRate)->InitDouble("Bitrate", 128, 1, 512, 0.1, "kBit/s");
   GetParam(kComplexity)->InitDouble("OPUS Complexity", 10, 0, 10, 1);
   GetParam(kPacketLoss)->InitPercentage("OPUS Expected packet loss");
   GetParam(kBufferSize)->InitDouble("Receive Buffer Size", 960, 1, 10000, 1);
-  GetParam(kFrameSize)->InitEnum("OPUS Frame Size", 1, 4, "Samples", iplug::IParam::kFlagsNone, "", "120", "240", "480", "960", "1920", "2880");
+  GetParam(kFrameSize)->InitEnum(
+    "OPUS Frame Size", 1, 4, "Samples", iplug::IParam::kFlagsNone,
+    "", "120", "240", "480", "960", "1920", "2880"
+  );
 
 #if IPLUG_EDITOR // http://bit.ly/2S64BDd
   mMakeGraphicsFunc = [&]() {

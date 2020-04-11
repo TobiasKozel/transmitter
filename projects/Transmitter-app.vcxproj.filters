@@ -339,6 +339,12 @@
     <ClInclude Include="..\src\URLParser.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\MultiCodec.h">
+      <Filter>src\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\CodecRAW.h">
+      <Filter>src\codec</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">

@@ -4,7 +4,6 @@
 #include "./Types.h"
 
 namespace transmitter {
-  const int MAX_PACKET_SIZE = 1464; // We'll just go with the max udp packet size without fragmentation
   const int MAX_CHANNELS = 2;
 
   class EncoderBase {
@@ -19,7 +18,7 @@ namespace transmitter {
     /**
      * Actual implementation of the encoder
      */
-    virtual int pushSamplesImpl(float** samples, int count, unsigned char* result) = 0;
+    virtual int encodeImpl(float** samples, int count, unsigned char* result) = 0;
 
   public:
     EncoderBase() {
@@ -32,8 +31,10 @@ namespace transmitter {
      * Will push samples to the buffer and encode them
      * if the frame size is reached
      */
-    int pushSamples(float** samples, int count, unsigned char* result) {
-      const int size = pushSamplesImpl(samples, count, result + 4);
+    int encode(float** samples, int count, unsigned char* result) {
+      return encodeImpl(samples, count, result);
+
+      const int size = encodeImpl(samples, count, result + 4); // Keep space for the name
       if (size == 0) { return 0; }
       memcpy(result, mName, 4); // Add the codec name
       return size + 4; // add the codec name
@@ -42,6 +43,7 @@ namespace transmitter {
     virtual ~EncoderBase() = default;
 
     bool compareName(const void* name) const {
+      return true;
       return strncmp(mName, static_cast<const char*>(name), 4) == 0;
     }
 
@@ -55,7 +57,7 @@ namespace transmitter {
   protected:
     RingBuffer<float> mBuffer[MAX_CHANNELS]; // The audio buffer
     char mName[5] = "NAME";
-    virtual int pushPacketImpl(const unsigned char* data, int size, float** result, int requestedSamples) = 0;
+    virtual int decodeImpl(const unsigned char* data, int size, float** result, int requestedSamples) = 0;
 
   private:
     TRANSMITTER_NO_COPY(DecoderBase)
@@ -65,8 +67,9 @@ namespace transmitter {
     /**
      * Will decode the packet provided and add into the buffer
      */
-    int pushPacket(const unsigned char* data, int size, float** result, int requestedSamples) {
-      return pushPacketImpl(data + 4, size - 4, result, requestedSamples);
+    int decode(const unsigned char* data, int size, float** result, int requestedSamples) {
+      return decodeImpl(data, size, result, requestedSamples);
+      return decodeImpl(data + 4, size - 4, result, requestedSamples);
     }
 
     /**
@@ -79,6 +82,7 @@ namespace transmitter {
     }
 
     bool compareName(const void* name) const {
+      return true;
       return strncmp(mName, static_cast<const char*>(name), 4) == 0;
     }
 

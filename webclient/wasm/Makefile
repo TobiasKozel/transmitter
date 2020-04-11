@@ -23,8 +23,8 @@ bind:
 	emmake make CFLAGS="-fno-stack-protector";
 init: autogen configure bind
 compile:
-	em++ ${EMCC_OPTS} ${EMCC_NASM_OPTS} --bind -o ${OUT_DIR}opusscript_native_nasm.js opusscript_encoder.cpp ${OPUS_NATIVE_DIR}/.libs/libopus.a; \
-	em++ ${EMCC_OPTS} ${EMCC_WASM_OPTS} --bind -o ${OUT_DIR}opusscript_native_wasm.js opusscript_encoder.cpp ${OPUS_NATIVE_DIR}/.libs/libopus.a; \
+	em++ ${EMCC_OPTS} ${EMCC_NASM_OPTS} --bind -o ${OUT_DIR}opusscript_native_nasm.js MultiCodec.cpp ${OPUS_NATIVE_DIR}/.libs/libopus.a; \
+	em++ ${EMCC_OPTS} ${EMCC_WASM_OPTS} --bind -o ${OUT_DIR}opusscript_native_wasm.js MultiCodec.cpp ${OPUS_NATIVE_DIR}/.libs/libopus.a; \
 	cp -f $(OPUS_NATIVE_DIR)/COPYING ${OUT_DIR}COPYING.libopus;
 debug:
-	em++ ${EMCC_OPTSD} ${EMCC_WASM_OPTS} --bind -o ${OUT_DIR}opusscript_native_wasm.js opusscript_encoder.cpp ${OPUS_NATIVE_DIR}/.libs/libopus.a; \
+	em++ ${EMCC_OPTSD} ${EMCC_WASM_OPTS} --bind -o ${OUT_DIR}opusscript_native_wasm.js MultiCodec.cpp ${OPUS_NATIVE_DIR}/.libs/libopus.a; \
