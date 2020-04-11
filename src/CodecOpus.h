@@ -96,7 +96,7 @@ namespace transmitter {
     }
 
   private:
-    int pushPacketImpl(const unsigned char* data, int size, float** result, int requestedSamples) override {
+    int pushPacketImpl(const unsigned char* data, const int size, float** result, int requestedSamples) override {
       const int frames = opus_decode_float(mDecoder, data, size, mInterleaved, 2880 * 2, 0);
       if (frames > 0) {
         for (int c = 0; c < 2; c++) {
@@ -107,11 +107,11 @@ namespace transmitter {
         }
       }
 
-      if (mBuffer[0].inBuffer() >= size) {
+      if (mBuffer[0].inBuffer() >= requestedSamples) {
         for (int c = 0; c < 2; c++) {
-          mBuffer[c].get(result[c], size);
+          mBuffer[c].get(result[c], requestedSamples);
         }
-        return size;
+        return requestedSamples;
       }
       return 0;
     }
