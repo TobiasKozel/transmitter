@@ -7,9 +7,9 @@
 
 namespace transmitter {
   /**
- * Ripped from. Pimped slightly to also output port and validity
- * https://stackoverflow.com/a/2616217
- */
+   * Ripped from. Pimped slightly to also output port and validity
+   * https://stackoverflow.com/a/2616217
+   */
   struct URLParser {
     std::string protocol, host, path, query;
     int port = 0;
@@ -76,6 +76,9 @@ namespace transmitter {
       valid = true;
     }
 
+    /**
+     * Returns the url with only the parts needed
+     */
     std::string reconstruct(bool _proto, bool _path, bool _query) const {
       std::string ret;
       if (_proto) {

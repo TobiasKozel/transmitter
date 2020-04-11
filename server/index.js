@@ -11,6 +11,7 @@ const udp4 = dgram.createSocket("udp4");
  * API config
  */
 const API = {
+	VERSION: 0.1,
 	/**
 	 * A https server listen to requests here and handle most of
 	 * the management and meta data for clients
@@ -177,7 +178,7 @@ function startListenTo(selfId, peerId) {
 		}
 	}
 
-	if (self && peer && self !== peer) {
+	if (self && peer) {
 		/**
 		 * A listener can only listen to one stream
 		 * So we'll get rid of any old connections which have
@@ -235,9 +236,10 @@ const handleAPIRequest = function(req, res) {
 	const pathname = parsed.pathname;
 	var response = { type: "not_set" };
 
-	if ("/get_udp_port" === pathname) {
-		response.type = "return_udp_port";
+	if ("/get_api_info" === pathname) {
+		response.type = "return_api_info";
 		response.port = API.UDP_PORT;
+		response.version = API.VERSION;
 	}
 
 	/**

@@ -12,7 +12,7 @@
 
 namespace transmitter {
   class MasterServerSession {
-
+    const float API_VESION = 0.1;
     httplib::Client* mClient = nullptr; // No idea how this will work with multiple sessions
 
     struct {
@@ -56,11 +56,15 @@ namespace transmitter {
       /**
        * Get the udp port for the audio packets
        */
-      auto res = mClient->Get("/get_udp_port");
+      auto res = mClient->Get("/get_api_info");
       if (res && res->status == 200) {
         nlohmann::json json = nlohmann::json::parse(res->body);
         try {
           mMasterServer.udpPort = json["port"].get<int>();
+          if (json["version"].get<float>() > API_VESION) {
+            assert(false);
+            return;
+          }
         } catch (...) { return; }
       } else { return; }
 

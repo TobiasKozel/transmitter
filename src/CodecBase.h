@@ -1,22 +1,26 @@
 #pragma once
 
 #include "thirdparty/RingBuffer.h"
-
+#include "./Types.h"
 
 namespace transmitter {
   const int MAX_PACKET_SIZE = 1464; // We'll just go with the max udp packet size without fragmentation
   const int MAX_CHANNELS = 2;
+
   class EncoderBase {
+
   protected:
     RingBuffer<float> mBuffer[MAX_CHANNELS]; // The audio buffer
     // unsigned char mPacket[MAX_PACKET_SIZE]; // The encoded packet
     char mName[5] = "NAME";
 
   private:
+    TRANSMITTER_NO_COPY(EncoderBase)
     /**
      * Actual implementation of the encoder
      */
     virtual int pushSamplesImpl(float** samples, int count, unsigned char* result) = 0;
+
   public:
     EncoderBase() {
       for (int i = 0; i < MAX_CHANNELS; i++) {
@@ -47,12 +51,17 @@ namespace transmitter {
   };
 
   class DecoderBase {
+
   protected:
     RingBuffer<float> mBuffer[MAX_CHANNELS]; // The audio buffer
     char mName[5] = "NAME";
     virtual int pushPacketImpl(const unsigned char* data, int size, float** result, int requestedSamples) = 0;
-    
+
+  private:
+    TRANSMITTER_NO_COPY(DecoderBase)
+
   public:
+    DecoderBase() = default;
     /**
      * Will decode the packet provided and add into the buffer
      */
@@ -64,7 +73,9 @@ namespace transmitter {
      * Larger buffers will result in higher latencies but smoother playback usually
      */
     void resizeBuffer(int size) {
-      mBuffer->setSize(size);
+      for (int i = 0; i < MAX_CHANNELS; i++) {
+        mBuffer[i].setSize(size);
+      }
     }
 
     bool compareName(const void* name) const {
@@ -73,13 +84,6 @@ namespace transmitter {
 
     const char* getName() const {
       return mName;
-    }
-
-
-    DecoderBase() {
-      for (int i = 0; i < MAX_CHANNELS; i++) {
-        mBuffer[i].setSize(2048);
-      }
     }
 
     virtual ~DecoderBase() = default;

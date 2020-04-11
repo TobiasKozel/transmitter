@@ -19,13 +19,14 @@ namespace transmitter {
 
     udp_socket mSocket = nullptr;
     udp_packet* mPacket = nullptr;
-    ip_address mAddress; // Address to send the packets to
+    ip_address mAddress = { 0, 0 }; // Address to send the packets to
     int mLocalPort = 0;
     bool mUdpReady = false; // Means the socket can send and receive data
 
 
     const int mChannels = 2; // No idea if this will ever change
     int mBufferSize = 2048;
+    TRANSMITTER_NO_COPY(AudioCommunicator)
   public:
     AudioCommunicator(const std::string& address, const int remotePort, const int localPort = 0) {
       mPacket = netlib_alloc_packet(MAX_PACKET_SIZE);
@@ -37,8 +38,6 @@ namespace transmitter {
       if (netlib_resolve_host(&mAddress, address.c_str(), remotePort) == -1) {
         assert(false);
       } else {
-        mPacket->address.host = mAddress.host; // These are both in big endian
-        mPacket->address.port = mAddress.port; // These are both in big endian
         mSocket = netlib_udp_open(localPort); // if it's zero, a random free port will be opened
         mLocalPort = netlib_swap_BE16(netlib_udp_get_peer_address(mSocket, -1)->port);
         mUdpReady = true;
@@ -65,6 +64,8 @@ namespace transmitter {
           assert(false);
         }
         if (mPacket->len > 0) {
+          mPacket->address.host = mAddress.host; // These are both in big endian
+          mPacket->address.port = mAddress.port; // These are both in big endian
           netlib_udp_send(mSocket, -1, mPacket);
         }
       }
@@ -74,7 +75,8 @@ namespace transmitter {
        */
       int out = 0;
       if (mUdpReady) {
-        while (netlib_udp_recv(mSocket, mPacket)) { // we might have a few packets queued
+        while (netlib_udp_recv(mSocket, mPacket))
+        { // we might have a few packets queued
           if (mActiveDecoder != nullptr && mActiveDecoder->compareName(mPacket->data)) {
             out = mActiveDecoder->pushPacket(mPacket->data, mPacket->len, outputs, nFrames);
           } else {
@@ -88,11 +90,9 @@ namespace transmitter {
         }
       }
 
-      if (out < nFrames) { // If we didn't get enough samples or none at all, fill the output with silence
-        for (int i = out; i < nFrames; i++) {
-          for (int c = 0; c < mChannels; c++) {
-            outputs[c][i] = 0; // output silence if there's nothing decoded
-          }
+      for (int i = out; i < nFrames; i++) {
+        for (int c = 0; c < mChannels; c++) {
+          outputs[c][i] = 0; // output silence if there's nothing decoded
         }
       }
     }

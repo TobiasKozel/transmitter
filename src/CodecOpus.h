@@ -8,17 +8,16 @@ namespace transmitter {
 
   class WrappedOpusEncoder : public EncoderBase {
     OpusEncoder* mEncoder = nullptr; // The encoder itself
-    float mInterleaved[2880 * 2]; // Max opus frame size at 48kHz
-    float mPreInterleave[2880];
+    float mInterleaved[2880 * 2] = { 0 }; // Max opus frame size at 48kHz
+    float mPreInterleave[2880] = { 0 };
     
     int mFrameSize = 480; // The size of the blocks handed over to the encoder
   public:
-
     WrappedOpusEncoder() {
       strcpy(mName, "OPUS");
       int err;
       /**
-       * We'll always use 2 channels at 48000kHz
+       * We'll always use 2 channels at 48kHz
        */
       mEncoder = opus_encoder_create(48000, 2, OPUS_APPLICATION_RESTRICTED_LOWDELAY, &err);
       // opus_encoder_ctl(mEncoder, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_5_MS)); // TODO find out if this does anything for the latency
@@ -61,10 +60,14 @@ namespace transmitter {
             mInterleaved[i] = mPreInterleave[s]; // interleave the signal
           }
         }
-        const int size = opus_encode_float(mEncoder, mInterleaved, mFrameSize, result, MAX_PACKET_SIZE);
-        if (size < 0) {
-          assert(false);
+        int size = 0;
+        if (mEncoder != nullptr) {
+          size = opus_encode_float(mEncoder, mInterleaved, mFrameSize, result, MAX_PACKET_SIZE);
+          if (size < 0) {
+            assert(false);
+          }
         }
+
         return size;
       }
       return 0;
@@ -72,15 +75,15 @@ namespace transmitter {
   };
 
   class WrappedOpusDecoder : public DecoderBase {
-    OpusDecoder* mDecoder;
-    float mInterleaved[2880 * 2]; // Interleaved buffer to encode data
-    float mPostInterleave[2880]; // Buffer to use for interleaving
+    OpusDecoder* mDecoder = nullptr;
+    float mInterleaved[2880 * 2] = { 0 }; // Interleaved buffer to encode data
+    float mPostInterleave[2880] = { 0 }; // Buffer to use for interleaving
     /**
      * This is the local buffer. The opus decoder will not always
      * produce samples if the packets arrive in the wrong order.
      * So this will trade latency for smoother playback
      */
-    int mBufferSize = 960;
+    int mBufferSize = 2048;
   public:
     WrappedOpusDecoder() {
       strcpy(mName, "OPUS");
@@ -89,6 +92,7 @@ namespace transmitter {
       if (err < 0) {
         assert(false);
       }
+      resizeBuffer(4096);
     }
 
     ~WrappedOpusDecoder() {
@@ -107,7 +111,7 @@ namespace transmitter {
         }
       }
 
-      if (mBuffer[0].inBuffer() >= requestedSamples) {
+      if (mBuffer[0].nFree() == 0 && mBuffer[0].inBuffer() >= requestedSamples) {
         for (int c = 0; c < 2; c++) {
           mBuffer[c].get(result[c], requestedSamples);
         }
