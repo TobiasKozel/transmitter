@@ -10,7 +10,7 @@ EMSCRIPTEN_BINDINGS() {
     class_<MultiCodec>("MultiCodec")
         .constructor()
         .function("setBufferSize", &MultiCodec::setBufferSize)
-        .function("encode", &MultiCodec::encode)
-        .function("popSamples", &MultiCodec::popSamples)
-        .function("decode", &MultiCodec::decode);
+        .function("encode", &MultiCodec::encode, allow_raw_pointers())
+        .function("popSamples", &MultiCodec::popSamples, allow_raw_pointers())
+        .function("decode", &MultiCodec::decode, allow_raw_pointers());
 }

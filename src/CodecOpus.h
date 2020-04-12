@@ -1,6 +1,6 @@
 #pragma once
 #include "../thirdparty/opus/include/opus.h"
-#include "CodecBase.h"
+#include "./CodecBase.h"
 #include <cstring>
 #include <cassert>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thirdparty/RingBuffer.h"
+#include "../thirdparty/RingBuffer.h"
 #include "./Types.h"
 
 namespace transmitter {
@@ -70,7 +70,6 @@ namespace transmitter {
 
     int popSamples(float** outputs, int requestedSamples) {
       int inbuf = mBuffer[0].inBuffer();
-      iplug::DBGMSG("decode buffer %i\n", inbuf);
       if (mBuffer[0].inBuffer() >= requestedSamples) {
         for (int c = 0; c < 2; c++) {
           mBuffer[c].get(outputs[c], requestedSamples);
