@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone, OnDestroy } from '@angular/core';
 import { interval } from 'rxjs';
 import { MatSelectChange } from '@angular/material/select';
 import { environment } from 'src/environments/environment';
@@ -10,7 +10,7 @@ import { MultiCodec } from 'src/app/classes/MultiCodec';
 	templateUrl: './listener.component.html',
 	styleUrls: ['./listener.component.css']
 })
-export class ListenerComponent implements OnInit {
+export class ListenerComponent implements OnInit, OnDestroy {
 
 	bufferSize = 512;
 	volume = 0.5;
@@ -20,11 +20,10 @@ export class ListenerComponent implements OnInit {
 	];
 
 	audioContext: AudioContext;
-	frameDuration = 0;
 
 	player: ScriptProcessorNode;
 	gainNode: GainNode;
-	decoderInstance: MultiCodec = undefined;
+	codecInstance: MultiCodec = undefined;
 
 	constructor(
 		private zone: NgZone,
@@ -37,19 +36,18 @@ export class ListenerComponent implements OnInit {
 			(window as any).DEBUGListener = this;
 			// this.play();
 		}
+		this.codecProvider.contructCodec((codec) => {
+			this.codecInstance = codec;
+		});
+	}
+
+	ngOnDestroy() {
+		this.codecProvider.destroyCodec(this.codecInstance);
 	}
 
 	play() {
-		if (!this.decoderInstance) {
-			this.decoderInstance = this.codecProvider.contructCodec();
-		} else {
-			this.codecProvider.destroyCodec(this.decoderInstance);
-			this.decoderInstance = null;
-		}
-		return;
 		if (!this.audioContext) {
 			this.audioContext = new AudioContext();
-			this.frameDuration = 1000 / this.audioContext.sampleRate;
 		}
 
 		if (!this.player) {
@@ -59,11 +57,15 @@ export class ListenerComponent implements OnInit {
 		}
 
 		this.zone.runOutsideAngular(() => {
-			// tslint:disable-next-line: deprecation
 			this.player.onaudioprocess = (outSignal) => {
-				//this.playbackBuffer.fillStereo(outSignal.outputBuffer, this.bufferSize);
-				// outSignal.outputBuffer.getChannelData(0).set(stereo.l);
-				// outSignal.outputBuffer.getChannelData(1).set(stereo.r);
+				if (!this.codecInstance) { return; }
+				this.codecInstance.popSamples(
+					[
+						outSignal.outputBuffer.getChannelData(0),
+						outSignal.outputBuffer.getChannelData(1)
+					],
+					this.bufferSize
+				);
 			};
 		});
 

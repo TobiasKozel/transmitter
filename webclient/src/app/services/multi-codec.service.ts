@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { MultiCodec } from 'src/app/classes/MultiCodec'
 import { environment } from 'src/environments/environment'
+import { callbackify } from 'util';
 
 // <reference path="@types/emscripten" />
 declare const Module;
@@ -8,7 +9,7 @@ declare const Module;
     providedIn: 'root'
 })
 export class MultiCodecService {
-
+    private pendingConstructions: ((param: MultiCodec) => void)[] = [];
     private isLoaded = false;
 
     constructor() {
@@ -18,21 +19,40 @@ export class MultiCodecService {
         this.loadCodec();
     }
 
-    public contructCodec(): MultiCodec {
+    /**
+     * Use this to contruct the object since the wasm might not
+     * be loaded yet
+     */
+    public contructCodec(callback: (param: MultiCodec) => void) {
         if (this.isLoaded) {
-            return new MultiCodec();
+            callback(new MultiCodec());
+        } else {
+            this.pendingConstructions.push(callback);
         }
-        return null;
     }
 
+    /**
+     * Use this to destroy a decoder
+     * Doen't do anything special, but might in the future
+     * @param codec The codec object to destroy
+     */
     public destroyCodec(codec: MultiCodec) {
         codec.destroy();
     }
 
+    /**
+     * Will load the wasm or plain js version of the codec
+     * if the url contains nowasm
+     */
     private loadCodec() {
+        return;
         const onload = () => {
 			console.log("codecs loaded!");
-			this.isLoaded = true;
+            this.isLoaded = true;
+            for (let i of this.pendingConstructions) {
+                this.contructCodec(i);
+            }
+            this.pendingConstructions = [];
         };
         
         /** Load it via a script tag */

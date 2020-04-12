@@ -1,3 +1,19 @@
+.background {
+    /* width: calc(100vw - 20px); */
+    /* height: calc(100vh - 20px); */
+    /* padding: 10px; */
+    width: 100vw;
+    height: 100vh;
+}
+
 .main {
-    padding: 10px;
+    max-width: 1024px;
+    max-height: 512px;
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    top: 20px;
+    bottom: 20px;
+    margin: auto;
+    overflow: auto;
 }

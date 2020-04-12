@@ -1,21 +1,23 @@
-<div class="main">
-    <mat-tab-group selectedIndex="0">
-        <mat-tab>
-            <ng-template mat-tab-label>
-                <mat-icon class="icon_spacer">
-                    radio
-                </mat-icon>
-                <ng-container>Listener</ng-container>
-            </ng-template>
-            <app-listener></app-listener>
-        </mat-tab>
-        <mat-tab disabled="true">
-            <ng-template mat-tab-label>
-                <mat-icon class="icon_spacer">
-                    cast
-                </mat-icon>
-                <ng-container>Streamer</ng-container>
-            </ng-template>
-        </mat-tab>
-    </mat-tab-group>
+<div class="background">
+    <mat-card class="main">
+        <mat-tab-group selectedIndex="0">
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <mat-icon class="icon_spacer">
+                        radio
+                    </mat-icon>
+                    <ng-container>Listener</ng-container>
+                </ng-template>
+                <app-listener></app-listener>
+            </mat-tab>
+            <mat-tab disabled="true">
+                <ng-template mat-tab-label>
+                    <mat-icon class="icon_spacer">
+                        cast
+                    </mat-icon>
+                    <ng-container>Streamer</ng-container>
+                </ng-template>
+            </mat-tab>
+        </mat-tab-group>
+    </mat-card>
 </div>

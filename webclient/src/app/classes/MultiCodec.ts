@@ -28,12 +28,22 @@ class FloatBuffer {
             const index = ptr / 4;
             this.sampleArrays[i] = Module.HEAPF32.subarray(index, index + length);
         }
-        
-
     }
 
     public getPtr(): number {
         return this.mainPtr;
+    }
+
+    public set(buf: Float32Array[]) {
+        for (let i = 0; i < Math.min(buf.length, this.channels); i++) {
+            this.sampleArrays[i].set(buf[i]);
+        }
+    }
+
+    public get(buf: Float32Array[]) {
+        for (let i = 0; i < Math.min(buf.length, this.channels); i++) {
+            buf[i].set(this.sampleArrays[i]);
+        }
     }
 
     public destroy() {
@@ -59,6 +69,14 @@ class CharBuffer {
 
     public getPtr(): number {
         return this.ptr;
+    }
+
+    public get(buf: Uint8Array) {
+        buf.set(this.arr);
+    }
+
+    public set(buf: Uint8Array) {
+        this.arr.set(buf);
     }
 
     public destroy() {
@@ -112,8 +130,9 @@ export class MultiCodec {
      * requested than currently decoded, the rest of the buffer will be filled with silence
      * @param requestedSamples The samples to copy in bufferDecode
      */
-    public popSamples(requestedSamples: number) {
+    public popSamples(buf: Float32Array[], requestedSamples: number) {
         this.emMultiCodec.popSamples(this.bufferDecode.getPtr(), requestedSamples);
+        this.bufferDecode.get(buf);
     }
 
     /**

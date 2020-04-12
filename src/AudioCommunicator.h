@@ -36,7 +36,6 @@ namespace transmitter {
       }
 
       // mCodec.setEncoder("RAWC");
-      mCodec.setEncoder("OPUS");
     }
 
     ~AudioCommunicator() {
