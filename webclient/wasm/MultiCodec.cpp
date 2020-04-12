@@ -15,17 +15,24 @@ EMSCRIPTEN_BINDINGS() {
                 float** input = reinterpret_cast<float**>(_input);
                 unsigned char* packet = reinterpret_cast<unsigned char*>(_packet);
                 return self.encode(input, count, packet);
-            }
-        )).function("decode", optional_override(
+            })
+        ).function("decode", optional_override(
             [](MultiCodec& self, int _packet, int count) {
                 unsigned char* packet = reinterpret_cast<unsigned char*>(_packet);
                 self.decode(packet, count);
-            }
-        )).function("popSamples", optional_override(
+            })
+        ).function("popSamples", optional_override(
             [](MultiCodec& self, int _output, int requestedSamples) {
                 float** output = reinterpret_cast<float**>(_output);
                 return self.popSamples(output, requestedSamples);
-            }
-        ))
-        ;
+            })
+        ).function("setEncoder", optional_override(
+            [](MultiCodec& self, std::string name) {
+                self.setEncoder(name.c_str());
+            })
+        ).function("setBitRate",
+            &MultiCodec::setBitRate
+        ).function("setBufferSize",
+            &MultiCodec::setBufferSize
+        );
 }
