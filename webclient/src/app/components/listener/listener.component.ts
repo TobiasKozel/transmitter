@@ -3,6 +3,7 @@ import { interval } from 'rxjs';
 import { MatSelectChange } from '@angular/material/select';
 import { environment } from 'src/environments/environment';
 import { MultiCodecService } from 'src/app/services/multi-codec.service';
+import { MultiCodec } from 'src/app/classes/MultiCodec';
 
 @Component({
 	selector: 'app-listener',
@@ -23,21 +24,29 @@ export class ListenerComponent implements OnInit {
 
 	player: ScriptProcessorNode;
 	gainNode: GainNode;
+	decoderInstance: MultiCodec = undefined;
 
 	constructor(
 		private zone: NgZone,
-		public codec: MultiCodecService
+		public codecProvider: MultiCodecService
 	) {
 	}
 
 	ngOnInit() {
 		if (!environment.production) {
 			(window as any).DEBUGListener = this;
-			this.play();
+			// this.play();
 		}
 	}
 
 	play() {
+		if (!this.decoderInstance) {
+			this.decoderInstance = this.codecProvider.contructCodec();
+		} else {
+			this.codecProvider.destroyCodec(this.decoderInstance);
+			this.decoderInstance = null;
+		}
+		return;
 		if (!this.audioContext) {
 			this.audioContext = new AudioContext();
 			this.frameDuration = 1000 / this.audioContext.sampleRate;

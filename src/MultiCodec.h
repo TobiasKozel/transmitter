@@ -17,7 +17,7 @@ namespace transmitter {
     RAWEncoder mRawEncoder;
 
     DecoderBase* mActiveDecoder = nullptr;
-    EncoderBase* mActiveEncoder = nullptr;
+    EncoderBase* mActiveEncoder = &mOpusEncoder;
     const int mChannels = 2; // No idea if this will ever change
     int mBufferSize = 2048;
 

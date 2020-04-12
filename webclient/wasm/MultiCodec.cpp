@@ -1,6 +1,7 @@
 #include <emscripten/bind.h>
 
 #include "../../src/MultiCodec.h"
+#include <vector>
 
 using namespace emscripten;
 using namespace transmitter;
@@ -9,15 +10,22 @@ using namespace transmitter;
 EMSCRIPTEN_BINDINGS() {
     class_<MultiCodec>("MultiCodec")
         .constructor()
-        .function("setBufferSize", &MultiCodec::setBufferSize)
-        .function("encode", &MultiCodec::encode, optional_override(
-            [](MultiCodec& self, const std::vector<std::vector<float>> samples, int count, std::vector<uint8_t>& data){
-                float** arr[] = { &(samples[0][0]), &(samples[1][0]) };
-                data.resize(1500);
-                return self.encode(arr, count, &data[0])
-                return bla(s.c_str());
+        .function("encode", optional_override(
+            [](MultiCodec& self, int _input, int count, int _packet) {
+                float** input = reinterpret_cast<float**>(_input);
+                unsigned char* packet = reinterpret_cast<unsigned char*>(_packet);
+                return self.encode(input, count, packet);
             }
-        ));
-        .function("popSamples", &MultiCodec::popSamples, allow_raw_pointers())
-        .function("decode", &MultiCodec::decode, allow_raw_pointers());
+        )).function("decode", optional_override(
+            [](MultiCodec& self, int _packet, int count) {
+                unsigned char* packet = reinterpret_cast<unsigned char*>(_packet);
+                self.decode(packet, count);
+            }
+        )).function("popSamples", optional_override(
+            [](MultiCodec& self, int _output, int requestedSamples) {
+                float** output = reinterpret_cast<float**>(_output);
+                return self.popSamples(output, requestedSamples);
+            }
+        ))
+        ;
 }
