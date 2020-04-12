@@ -68,6 +68,9 @@ namespace transmitter {
       decodeImpl(data + 4, size - 4);
     }
 
+    /**
+     * Will retrieve a requested amount of samples
+     */
     int popSamples(float** outputs, int requestedSamples) {
       int inbuf = mBuffer[0].inBuffer();
       if (mBuffer[0].inBuffer() >= requestedSamples) {

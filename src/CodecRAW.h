@@ -48,7 +48,7 @@ namespace transmitter {
   public:
     RAWDecoder() {
       strcpy(mName, "RAWC");
-      resizeBuffer(4096);
+      resizeBuffer(512);
     }
 
     ~RAWDecoder() {

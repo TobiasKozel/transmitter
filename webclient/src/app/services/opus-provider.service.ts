@@ -3,10 +3,7 @@ import { environment } from 'src/environments/environment';
 declare function importScripts(...urls: string[]): void;
 declare const self: { encoder: OpusProviderService };
 
-// <reference path="@types/emscripten" />
-
 declare const Module;
-
 
 @Injectable({
 	providedIn: 'root'
