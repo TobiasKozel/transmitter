@@ -3,6 +3,8 @@
  * Based on the "circbuf.h" implementation from Cockos WDL but without their heap buffer
  */
 
+#include <cstring>
+
 namespace transmitter {
   template <typename T>
   class RingBuffer {

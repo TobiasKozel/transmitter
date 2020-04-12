@@ -1,12 +1,15 @@
 #pragma once
 
+#ifndef __EMSCRIPTEN__
 #include "IControl.h"
 #include "IControls.h"
 #include "IGraphicsStructs.h"
+#endif
 
 namespace transmitter {
   const int MAX_PACKET_SIZE = 1464; // We'll just go with the max udp packet size without fragmentation
 
+#ifndef __EMSCRIPTEN__
   typedef iplug::sample sample;
   typedef iplug::igraphics::IGraphics IGraphics;
   typedef iplug::igraphics::IControl IControl;
@@ -38,6 +41,7 @@ namespace transmitter {
   typedef iplug::igraphics::IVStyle IVStyle;
   typedef iplug::igraphics::IPopupMenu IPopupMenu;
   const IVStyle DEFAULT_STYLE = IVStyle();
+#endif
 
   /**
    * A macro to disable all kinds of implicit copy mechanisms

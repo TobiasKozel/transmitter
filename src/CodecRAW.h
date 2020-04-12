@@ -17,10 +17,8 @@ namespace transmitter {
 
   private:
     int encodeImpl(float** samples, int count, unsigned char* result) override {
-      if (count > 0) {
-        mBuffer[0].add(samples[0], count);
-        mBuffer[1].add(samples[1], count);
-      }
+      mBuffer[0].add(samples[0], count);
+      mBuffer[1].add(samples[1], count);
       if (mFrameSize <= mBuffer[0].inBuffer()) {
         const int packetSize = mFrameSize * sizeof(float) * 2; // two channels
         for (int c = 0; c < 2; c++) {

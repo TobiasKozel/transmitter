@@ -35,8 +35,8 @@ namespace transmitter {
         mUdpReady = true;
       }
 
-      // mCodec.setEncoder("OPUS");
-      mCodec.setEncoder("RAWC");
+      // mCodec.setEncoder("RAWC");
+      mCodec.setEncoder("OPUS");
     }
 
     ~AudioCommunicator() {
@@ -64,7 +64,7 @@ namespace transmitter {
            * There might still be more data left to send
            * that didn't fit into a single packet
            */
-          mPacket->len = mCodec.encode(nullptr, 0, mPacket->data);
+          mPacket->len = mCodec.encode(inputs, 0, mPacket->data);
         } while (mPacket->len > 0);
       }
 

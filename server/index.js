@@ -317,4 +317,4 @@ udp4.on("listening", () => {
 udp4.bind(API.UDP_PORT);
 
 
-// TODO start a time which clears out sockets which haven't recieved any packets in a while 
+// TODO start a timer which clears out sockets which haven't recieved any packets in a while 
