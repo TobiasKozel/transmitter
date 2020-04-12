@@ -32,8 +32,6 @@ namespace transmitter {
      * if the frame size is reached
      */
     int encode(float** samples, int count, unsigned char* result) {
-      return encodeImpl(samples, count, result);
-
       const int size = encodeImpl(samples, count, result + 4); // Keep space for the name
       if (size == 0) { return 0; }
       memcpy(result, mName, 4); // Add the codec name
@@ -43,7 +41,6 @@ namespace transmitter {
     virtual ~EncoderBase() = default;
 
     bool compareName(const void* name) const {
-      return true;
       return strncmp(mName, static_cast<const char*>(name), 4) == 0;
     }
 
@@ -57,7 +54,7 @@ namespace transmitter {
   protected:
     RingBuffer<float> mBuffer[MAX_CHANNELS]; // The audio buffer
     char mName[5] = "NAME";
-    virtual int decodeImpl(const unsigned char* data, int size, float** result, int requestedSamples) = 0;
+    virtual void decodeImpl(const unsigned char* data, int size) = 0;
 
   private:
     TRANSMITTER_NO_COPY(DecoderBase)
@@ -67,9 +64,20 @@ namespace transmitter {
     /**
      * Will decode the packet provided and add into the buffer
      */
-    int decode(const unsigned char* data, int size, float** result, int requestedSamples) {
-      return decodeImpl(data, size, result, requestedSamples);
-      return decodeImpl(data + 4, size - 4, result, requestedSamples);
+    void decode(const unsigned char* data, int size) {
+      decodeImpl(data + 4, size - 4);
+    }
+
+    int popSamples(float** outputs, int requestedSamples) {
+      int inbuf = mBuffer[0].inBuffer();
+      iplug::DBGMSG("decode buffer %i\n", inbuf);
+      if (mBuffer[0].inBuffer() >= requestedSamples) {
+        for (int c = 0; c < 2; c++) {
+          mBuffer[c].get(outputs[c], requestedSamples);
+        }
+        return requestedSamples;
+      }
+      return 0;
     }
 
     /**
@@ -82,7 +90,6 @@ namespace transmitter {
     }
 
     bool compareName(const void* name) const {
-      return true;
       return strncmp(mName, static_cast<const char*>(name), 4) == 0;
     }
 

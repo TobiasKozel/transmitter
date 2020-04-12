@@ -99,7 +99,7 @@ namespace transmitter {
     }
 
   private:
-    int decodeImpl(const unsigned char* data, const int size, float** result, int requestedSamples) override {
+    void decodeImpl(const unsigned char* data, const int size) override {
       const int frames = opus_decode_float(mDecoder, data, size, mInterleaved, 2880 * 2, 0);
       if (frames > 0) {
         for (int c = 0; c < 2; c++) {
@@ -109,15 +109,6 @@ namespace transmitter {
           mBuffer[c].add(mPostInterleave, frames);
         }
       }
-      int inbuf = mBuffer[0].inBuffer();
-      iplug::DBGMSG("decode buffer %i\n", inbuf);
-      if (mBuffer[0].inBuffer() >= requestedSamples) {
-        for (int c = 0; c < 2; c++) {
-          mBuffer[c].get(result[c], requestedSamples);
-        }
-        return requestedSamples;
-      }
-      return 0;
     }
   };
 }

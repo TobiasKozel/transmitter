@@ -4,9 +4,9 @@
 
 namespace transmitter {
   class RAWEncoder : public EncoderBase {
-    float mInterleaved[2880 * 2] = { 0 }; // Max opus frame size at 48kHz
-    float mPreInterleave[2880] = { 0 };
-    int mFrameSize = 240; // The size of the blocks handed over to the encoder
+    static constexpr int mFrameSize = MAX_PACKET_SIZE / 10;
+    float mInterleaved[mFrameSize * 2] = { 0 }; // Max opus frame size at 48kHz
+    float mPreInterleave[mFrameSize] = { 0 };
   public:
     RAWEncoder() {
       strcpy(mName, "RAWC");
@@ -17,25 +17,30 @@ namespace transmitter {
 
   private:
     int encodeImpl(float** samples, int count, unsigned char* result) override {
-      mBuffer[0].add(samples[0], count);
-      mBuffer[1].add(samples[1], count);
+      if (count > 0) {
+        mBuffer[0].add(samples[0], count);
+        mBuffer[1].add(samples[1], count);
+      }
       if (mFrameSize <= mBuffer[0].inBuffer()) {
+        const int packetSize = mFrameSize * sizeof(float) * 2; // two channels
         for (int c = 0; c < 2; c++) {
           mBuffer[c].get(mPreInterleave, mFrameSize);
           for (int i = c, s = 0; s < mFrameSize; i += 2, s++) {
             mInterleaved[i] = mPreInterleave[s]; // interleave the signal
           }
         }
-        int size = 0;
-        return size;
+        // don't care about endiannes in this day and age
+        memcpy(result, mInterleaved, packetSize);
+        return packetSize;
       }
       return 0;
     }
   };
 
   class RAWDecoder : public DecoderBase {
-    float mInterleaved[2880 * 2] = { 0 }; // Interleaved buffer to encode data
-    float mPostInterleave[2880] = { 0 }; // Buffer to use for interleaving
+    static constexpr int mFrameSize = MAX_PACKET_SIZE / 10;
+    float mInterleaved[mFrameSize * 2] = { 0 }; // Interleaved buffer to encode data
+    float mPostInterleave[mFrameSize] = { 0 }; // Buffer to use for interleaving
     /**
      * This is the local buffer. The opus decoder will not always
      * produce samples if the packets arrive in the wrong order.
@@ -52,9 +57,10 @@ namespace transmitter {
     }
 
   private:
-    int decodeImpl(const unsigned char* data, const int size, float** result, int requestedSamples) override {
-      const int frames = 0;
+    void decodeImpl(const unsigned char* data, const int size) override {
+      const int frames = size / sizeof(float) / 2; // Two channels
       if (frames > 0) {
+        memcpy(mInterleaved, data, size);
         for (int c = 0; c < 2; c++) {
           for (int i = c, s = 0; s < frames; i += 2, s++) {
             mPostInterleave[s] = mInterleaved[i];
@@ -62,15 +68,6 @@ namespace transmitter {
           mBuffer[c].add(mPostInterleave, frames);
         }
       }
-      int inbuf = mBuffer[0].inBuffer();
-      iplug::DBGMSG("decode buffer %i\n", inbuf);
-      if (mBuffer[0].inBuffer() >= requestedSamples) {
-        for (int c = 0; c < 2; c++) {
-          mBuffer[c].get(result[c], requestedSamples);
-        }
-        return requestedSamples;
-      }
-      return 0;
     }
   };
 }

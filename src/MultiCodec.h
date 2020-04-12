@@ -54,23 +54,26 @@ namespace transmitter {
       
     }
 
-    int encode(float** input, int nFrames, unsigned char* output) {
+    int encode(float** input, int nFrames, unsigned char* output) const {
       if (mActiveEncoder == nullptr) { return 0; }
       return mActiveEncoder->encode(input, nFrames, output);
     }
 
-    int decode(const unsigned char* data, int size, float** outputs, int requestedSamples) {
-      int out = 0;
+    void decode(const unsigned char* data, int size) {
       if (size > 0) {
         if (mActiveDecoder != nullptr && mActiveDecoder->compareName(data)) {
           // make sure we got a decoder and it's the right one
-          out = mActiveDecoder->decode(data, size, outputs, requestedSamples);
+          mActiveDecoder->decode(data, size);
         } else {
           // If there's none or a different one, check against the available ones
           setDecoder(data);
         }
       }
+    }
 
+    int popSamples(float** outputs, int requestedSamples) const {
+      if (mActiveDecoder == nullptr) { return 0; }
+      const int out = mActiveDecoder->popSamples(outputs, requestedSamples);
       for (int i = out; i < requestedSamples; i++) {
         for (int c = 0; c < mChannels; c++) {
           outputs[c][i] = 0; // output silence if there's nothing decoded

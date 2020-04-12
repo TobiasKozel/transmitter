@@ -51,28 +51,32 @@ namespace transmitter {
        * Encode the input
        */
       if (mUdpReady) {
-        memset(mPacket->data, 0, MAX_PACKET_SIZE);
-        mPacket->len = mCodec.encode(inputs, nFrames, mPacket->data);
+        mPacket->len = mCodec.encode(inputs, nFrames, mPacket->data); // push in all the samples to encode
 
-        if (mPacket->len > MAX_PACKET_SIZE) {
-          assert(false);
-        }
-
-        if (mPacket->len > 0) {
+        do {
+          if (mPacket->len > MAX_PACKET_SIZE) {
+            assert(false);
+          }
           mPacket->address.host = mAddress.host; // These are both in big endian
           mPacket->address.port = mAddress.port; // These are both in big endian
-          // netlib_udp_send(mSocket, -1, mPacket);
-        }
+          netlib_udp_send(mSocket, -1, mPacket);
+          /**
+           * There might still be more data left to send
+           * that didn't fit into a single packet
+           */
+          mPacket->len = mCodec.encode(nullptr, 0, mPacket->data);
+        } while (mPacket->len > 0);
       }
 
       /**
        * Decode the remote packets
        */
       if (mUdpReady) {
-        // while (netlib_udp_recv(mSocket, mPacket))
-        { // we might have a few packets queued
-          mCodec.decode(mPacket->data, mPacket->len, outputs, nFrames);
+        while (netlib_udp_recv(mSocket, mPacket)) {
+          // we might have a few packets queued
+          mCodec.decode(mPacket->data, mPacket->len);
         }
+        mCodec.popSamples(outputs, nFrames);
       }
     }
 
