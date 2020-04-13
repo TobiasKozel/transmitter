@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { MultiCodec } from 'src/app/classes/MultiCodec'
+import { URLParser } from '../classes/URLParser';
 
 // <reference path="@types/emscripten" />
 declare const Module;
@@ -42,13 +44,40 @@ export class WasmLoaderService {
 		document.getElementsByTagName("head")[0].appendChild(script);
 	}
 
+	public constructURLParser(url: string, callback: (param: URLParser) => void) {
+		this.construct(() => {
+			callback(new URLParser(url));
+		});
+	}
+
+	/**
+	 * Use this to contruct the object since the wasm might not
+	 * be loaded yet
+	 */
+	public contructCodec(callback: (param: MultiCodec) => void) {
+		this.construct(() => {
+			callback(new MultiCodec());
+		});
+	}
+
+	/**
+	 * Use this to destroy a decoder
+	 * Doens't do anything special, but might in the future
+	 * @param codec The codec object to destroy
+	 */
+	public destroyCodec(codec: MultiCodec) {
+		if (codec) {
+			codec.destroy();
+		}
+	}
+
 	/**
 	 * Everything relying on the wasm module should be constructed
 	 * via this function to ensure wasm is ready
 	 * @param callback Function to be called once
 	 *                 the wasm module is loaded
 	 */
-	public construct(callback: () => void) {
+	private construct(callback: () => void) {
 		if (this.isLoaded) {
 			callback();
 		} else {

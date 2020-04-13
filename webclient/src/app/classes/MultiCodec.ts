@@ -133,6 +133,10 @@ export class MultiCodec {
         this.packetEncode = new CharBuffer(1500);
         
         if (!environment.production) {
+            if ((<any>window).DEBUGcodecs === undefined) {
+                // Just to keep track of the codec object
+                (<any>window).DEBUGcodecs = [];
+            }
             (<any>window).DEBUGcodecs.push(this);
         }
     }
@@ -163,6 +167,10 @@ export class MultiCodec {
     public popSamples(buf: Float32Array[], requestedSamples: number) {
         this.emMultiCodec.popSamples(this.bufferDecode.getPtr(), requestedSamples);
         this.bufferDecode.get(buf);
+    }
+
+    public setBufferSize(size: number) {
+        this.emMultiCodec.setBufferSize(size);
     }
 
     /**

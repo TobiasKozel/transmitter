@@ -1,7 +1,6 @@
 import { Component, OnInit, NgZone, OnDestroy } from '@angular/core';
 import { MatSelectChange } from '@angular/material/select';
 import { environment } from 'src/environments/environment';
-import { MultiCodecService } from 'src/app/services/multi-codec.service';
 import { MultiCodec } from 'src/app/classes/MultiCodec';
 import { SessionProviderService } from 'src/app/services/session-provider.service';
 

@@ -6,11 +6,11 @@
 				<mat-icon *ngIf="panel.expanded">keyboard_arrow_up</mat-icon>
 			</button>
 			
-			<span class="header_element">{{ session.url }}</span>
+			<span class="header_element">{{ session.displayName }}</span>
 		</mat-panel-title>
 
 		<mat-panel-description>
-			<span class="header_element header_listeners">Listeners: {{ views }}</span>
+			<span class="header_element header_listeners">Listeners: {{ session.views }}</span>
 		</mat-panel-description>
 			
 
@@ -37,7 +37,7 @@
 	<div class="divider"></div>
 	Localbuffersize
 	<mat-slider min="128" max="12800" step="128" class="sliders"
-		[value]="codecBufferSize" (input)="codecBufferSize = $event.value">
+		[value]="session.codecBufferSize" (input)="session.codecBufferSizeChanged($event.value)">
 	</mat-slider>
 
 

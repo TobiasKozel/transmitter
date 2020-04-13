@@ -1,22 +1,32 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { MultiCodecService } from './multi-codec.service';
 import { MultiCodec } from '../classes/MultiCodec';
+import { WasmLoaderService } from './wasm-loader.service';
+import { URLParser } from '../classes/URLParser';
 
 export class ClientSession {
 	private codecInstance: MultiCodec;
+
+	public displayName = "";
+	public codecBufferSize = 2048;
+	public views = 0;
+
 	constructor(
-		private http: HttpClient,
-		private codec: MultiCodecService,
-		public url: string
+		private wasm: WasmLoaderService,
+		private url: URLParser
 	) {
-		codec.contructCodec((c) => {
+		this.displayName = url.path;
+		wasm.contructCodec((c) => {
 			this.codecInstance = c;
 		});
 	}
 
-	destroy() {
-		this.codec.destroyCodec(this.codecInstance);
+	public codecBufferSizeChanged(size: number) {
+		this.codecBufferSize = size;
+		this.codecInstance.setBufferSize(size);
+	}
+
+	public destroy() {
+		this.wasm.destroyCodec(this.codecInstance);
 	}
 }
 
@@ -26,16 +36,19 @@ export class ClientSession {
 export class SessionProviderService implements OnDestroy {
 	public sessions: ClientSession[] = [];
 	constructor(
-		private http: HttpClient,
-		private codec: MultiCodecService
+		private wasm: WasmLoaderService
 	) {
-
+		this.createSession(window.location.href);
 	}
 
-	createSession(url: string): ClientSession {
-		let s = new ClientSession(this.http, this.codec, url);
-		this.sessions.push(s);
-		return s;
+	createSession(url: string) {
+		if (url.search("!") === -1) { return; }
+		this.wasm.constructURLParser(url, (parsed) => {
+			if (parsed.valid) {
+				let s = new ClientSession(this.wasm, parsed);
+				this.sessions.push(s);
+			}
+		});
 	}
 
 	destroySession(s: ClientSession) {
