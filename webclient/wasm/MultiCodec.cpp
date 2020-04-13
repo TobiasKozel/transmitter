@@ -1,6 +1,7 @@
 #include <emscripten/bind.h>
 
 #include "../../src/MultiCodec.h"
+#include "../../src/UrlParser.h"
 #include <vector>
 
 using namespace emscripten;
@@ -35,4 +36,16 @@ EMSCRIPTEN_BINDINGS() {
         ).function("setBufferSize",
             &MultiCodec::setBufferSize
         );
+
+        class_<URLParser>("URLParser")
+            .constructor<const std::string&>()
+            .property("protocol", &URLParser::protocol)
+            .property("host", &URLParser::host)
+            .property("path", &URLParser::path)
+            .property("query", &URLParser::query)
+            .property("port", &URLParser::port)
+            .property("ssl", &URLParser::ssl)
+            .property("valid", &URLParser::valid)
+            .property("nonDefaultPort", &URLParser::nonDefaultPort)
+            .function("reconstruct", &URLParser::reconstruct);
 }
