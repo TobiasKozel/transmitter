@@ -155,8 +155,9 @@ export class MultiCodec {
      * Will decode the packet in packetDecode and add it onto the buffer
      * @param packetSize The size of the packet to decode
      */
-    public decode(packetSize: number) {
-        this.emMultiCodec.decode(this.packetDecode.getPtr(), packetSize);
+    public decode(packet: Uint8Array) {
+        this.packetDecode.set(packet);
+        this.emMultiCodec.decode(this.packetDecode.getPtr(), packet.length);
     }
 
     /**

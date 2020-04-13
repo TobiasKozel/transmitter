@@ -1,5 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { ClientSession, SessionProviderService } from 'src/app/services/session-provider.service';
+import { SessionProviderService } from 'src/app/services/session-provider.service';
+import { ClientSession } from 'src/app/classes/ClientSession';
 
 @Component({
 	selector: 'app-listener-session',

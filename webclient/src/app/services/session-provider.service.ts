@@ -1,42 +1,20 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { MultiCodec } from '../classes/MultiCodec';
 import { WasmLoaderService } from './wasm-loader.service';
-import { URLParser } from '../classes/URLParser';
-
-export class ClientSession {
-	private codecInstance: MultiCodec;
-
-	public displayName = "";
-	public codecBufferSize = 2048;
-	public views = 0;
-
-	constructor(
-		private wasm: WasmLoaderService,
-		private url: URLParser
-	) {
-		this.displayName = url.path;
-		wasm.contructCodec((c) => {
-			this.codecInstance = c;
-		});
-	}
-
-	public codecBufferSizeChanged(size: number) {
-		this.codecBufferSize = size;
-		this.codecInstance.setBufferSize(size);
-	}
-
-	public destroy() {
-		this.wasm.destroyCodec(this.codecInstance);
-	}
-}
+import { ClientSession } from '../classes/ClientSession';
+import { ApiService } from './api.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class SessionProviderService implements OnDestroy {
+
+	/**
+	 * UI bound
+	 */
 	public sessions: ClientSession[] = [];
 	constructor(
-		private wasm: WasmLoaderService
+		private wasm: WasmLoaderService,
+		private api: ApiService
 	) {
 		this.createSession(window.location.href);
 	}
@@ -45,7 +23,7 @@ export class SessionProviderService implements OnDestroy {
 		if (url.search("!") === -1) { return; }
 		this.wasm.constructURLParser(url, (parsed) => {
 			if (parsed.valid) {
-				let s = new ClientSession(this.wasm, parsed);
+				let s = new ClientSession(this.wasm, this.api, parsed);
 				this.sessions.push(s);
 			}
 		});
