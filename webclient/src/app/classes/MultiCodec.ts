@@ -30,22 +30,38 @@ class FloatBuffer {
         }
     }
 
+    /**
+     * Returns the pointer to the array of pointers which contain the
+     * actual sample data for each channel
+     */
     public getPtr(): number {
         return this.mainPtr;
     }
 
+    /**
+     * Copy in the audio provided
+     * @param buf The data to copy in, each float array represents a channel
+     */
     public set(buf: Float32Array[]) {
         for (let i = 0; i < Math.min(buf.length, this.channels); i++) {
             this.sampleArrays[i].set(buf[i]);
         }
     }
 
+    /**
+     * Copy out the audio
+     * @param buf The arrays to store the result in
+     */
     public get(buf: Float32Array[]) {
         for (let i = 0; i < Math.min(buf.length, this.channels); i++) {
             buf[i].set(this.sampleArrays[i]);
         }
     }
 
+    /**
+     * Will free all the allocated arrays
+     * be sure to call this
+     */
     public destroy() {
         for (let i = 0; i < this.channels; i++) {
             Module._free(this.channelArrayPtrs[i]);
@@ -89,7 +105,15 @@ class CharBuffer {
  * also allocates the arrays to communicate with it
  */
 export class MultiCodec {
-    private emMultiCodec: any = undefined; // The emscripten object
+    /**
+     * The emscripten object
+     */
+    private emMultiCodec: any = undefined;
+
+    /**
+     * Buffers shared with javascript and the c++ code
+     * to copy data in and out
+     */
     private bufferDecode: FloatBuffer = undefined;
     private bufferEncode: FloatBuffer = undefined;
     private packetDecode: CharBuffer = undefined;
@@ -99,6 +123,10 @@ export class MultiCodec {
 
         this.bufferDecode = new FloatBuffer(1024, 2);
         this.bufferEncode = new FloatBuffer(1024, 2);
+
+        /**
+         * Roughly the MTU for a UDP packet
+         */
         this.packetDecode = new CharBuffer(1500);
         this.packetEncode = new CharBuffer(1500);
         

@@ -32,11 +32,13 @@ export class MultiCodecService {
 
 	/**
 	 * Use this to destroy a decoder
-	 * Doen't do anything special, but might in the future
+	 * Doens't do anything special, but might in the future
 	 * @param codec The codec object to destroy
 	 */
 	public destroyCodec(codec: MultiCodec) {
-		codec.destroy();
+		if (codec) {
+			codec.destroy();
+		}
 	}
 
 	/**
