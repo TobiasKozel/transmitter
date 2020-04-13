@@ -9,6 +9,8 @@ import { ClientSession, SessionProviderService } from 'src/app/services/session-
 export class ListenerSessionComponent implements OnInit {
 	public muted = false;
 	public volume = 1.0;
+	public codecBufferSize = 2048;
+	public views = 0;
 	@Input("session") session: ClientSession;
 
 	constructor(private sessionProvider: SessionProviderService) { }

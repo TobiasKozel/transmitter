@@ -17,7 +17,7 @@ export class WasmLoaderService {
 
 	constructor() {
 		const onload = () => {
-			console.log("codecs loaded!");
+			console.log("*asm module loaded!");
 			this.isLoaded = true;
 			const c = this.pendingConstructions;
 			this.pendingConstructions = [];
@@ -28,7 +28,7 @@ export class WasmLoaderService {
 		const script = document.createElement("script");
 		const url = window.location.href;
 		if (url.search("nowasm") === -1) {
-			console.log("Using wasm for codecs");
+			console.log("Loading wasm module...");
 			script.onload = () => {
 				Module.onRuntimeInitialized = onload;
 			};
@@ -36,10 +36,9 @@ export class WasmLoaderService {
 		} else {
 			/** Allow using the non wasm version if the url contains "nowasm" */
 			script.onload = onload;
-			console.log("Not using wasm for codecs");
+			console.log("Loading nawm module");
 			script.src = "/assets/multicodec_nasm.js";
 		}
-		console.log("Loading codecs...");
 		document.getElementsByTagName("head")[0].appendChild(script);
 	}
 
