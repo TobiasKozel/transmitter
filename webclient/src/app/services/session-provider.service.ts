@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { MultiCodecService } from './multi-codec.service';
 import { MultiCodec } from '../classes/MultiCodec';
 
-export class Session {
+export class ClientSession {
 	private codecInstance: MultiCodec;
 	constructor(
 		private http: HttpClient,
@@ -24,7 +24,7 @@ export class Session {
 	providedIn: 'root'
 })
 export class SessionProviderService implements OnDestroy {
-	public sessions: Session[] = [];
+	public sessions: ClientSession[] = [];
 	constructor(
 		private http: HttpClient,
 		private codec: MultiCodecService
@@ -32,13 +32,13 @@ export class SessionProviderService implements OnDestroy {
 
 	}
 
-	createSession(url: string): Session {
-		let s = new Session(this.http, this.codec, url);
+	createSession(url: string): ClientSession {
+		let s = new ClientSession(this.http, this.codec, url);
 		this.sessions.push(s);
 		return s;
 	}
 
-	destroySession(s: Session) {
+	destroySession(s: ClientSession) {
 		let index = this.sessions.indexOf(s);
 		if (index !== -1) {
 			this.sessions[index].destroy();

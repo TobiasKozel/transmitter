@@ -4,6 +4,7 @@ import { MatSelectChange } from '@angular/material/select';
 import { environment } from 'src/environments/environment';
 import { MultiCodecService } from 'src/app/services/multi-codec.service';
 import { MultiCodec } from 'src/app/classes/MultiCodec';
+import { SessionProviderService } from 'src/app/services/session-provider.service';
 
 @Component({
 	selector: 'app-listener',
@@ -25,7 +26,8 @@ export class ListenerComponent implements OnInit, OnDestroy {
 	gainNode: GainNode;
 
 	constructor(
-		private zone: NgZone
+		private zone: NgZone,
+		public sessionProvider: SessionProviderService
 	) {
 	}
 
@@ -37,6 +39,11 @@ export class ListenerComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy() {
+	}
+
+	connect(address: string) {
+		console.log(address);
+		this.sessionProvider.createSession(address);
 	}
 
 	play() {

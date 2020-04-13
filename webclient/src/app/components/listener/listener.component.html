@@ -1,6 +1,16 @@
 <div class="tab_content">
+    <app-listener-session *ngFor="let i of sessionProvider.sessions" [session]="i">
+
+    </app-listener-session>
 
     <div>
-        
+        <mat-form-field class="address_input">
+            <input matInput placeholder="Enter a address of a broadcast to start listening" #address_input>
+        </mat-form-field>
+
+        <button color="primary" mat-raised-button (click)="connect(address_input.value)"
+                class="address_connect_button">
+            <mat-icon>play_arrow</mat-icon>
+        </button>
     </div>
 </div>

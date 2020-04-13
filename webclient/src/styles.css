@@ -92,16 +92,6 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     margin-top: 10px;
 }
 
-.wss_address_input {
-    margin-right: 10px;
-    width: 80%;
-    margin-bottom: -5px;
-}
-
-.connectButton {
-    width: calc(20% - 15px);
-}
-
 .panel {
     background-color: #DDD;
     margin: 5px;

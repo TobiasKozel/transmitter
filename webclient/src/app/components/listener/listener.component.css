@@ -1,16 +1,7 @@
-.sideBySide {
-    display: flex;
-    widows: 100%;
+.address_input {
+    width: 80%;
 }
 
-.sliders {
-    width: 100%;
-}
-
-.bufferSettings {
-    flex-grow: 1;
-}
-
-.bufferStats {
-    min-width: 200px;
+.address_connect_button {
+    width: calc(20% - 15px);
 }
