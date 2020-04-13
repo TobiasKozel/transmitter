@@ -1,7 +1,20 @@
 <mat-expansion-panel class="main" hideToggle disabled="true" #panel>
 	<mat-expansion-panel-header>
-		<span>{{ session.url }}</span>
-		<div>
+		<mat-panel-title>
+			<button (click)="panel.toggle()" mat-icon-button aria-label="toggle" class="header_element icon_spaceing">
+				<mat-icon *ngIf="!panel.expanded">keyboard_arrow_down</mat-icon>
+				<mat-icon *ngIf="panel.expanded">keyboard_arrow_up</mat-icon>
+			</button>
+			
+			<span class="header_element">{{ session.url }}</span>
+		</mat-panel-title>
+
+		<mat-panel-description>
+			<span class="header_element header_listeners">Listeners: {{ views }}</span>
+		</mat-panel-description>
+			
+
+		<div class="header_element header_volume_group">
 			<button (click)="toggleMute()" mat-icon-button aria-label="Toggle mute">
 				<mat-icon *ngIf="muted">volume_off</mat-icon>
 				<mat-icon *ngIf="!muted && volume >= 1">volume_up</mat-icon>
@@ -12,19 +25,16 @@
 					[value]="volume" (input)="volume = $event.value">
 			</mat-slider>
 		</div>
-		<span>Views {{ views }}</span>
 		
-		<button (click)="close()" mat-icon-button aria-label="Delete session">
+		<button (click)="close()" mat-icon-button aria-label="Delete session" class="header_element">
 			<mat-icon>close</mat-icon>
 		</button>
 		
-		<button (click)="panel.toggle()" mat-icon-button aria-label="toggle">
-			<mat-icon *ngIf="!panel.expanded">keyboard_arrow_down</mat-icon>
-			<mat-icon *ngIf="panel.expanded">keyboard_arrow_up</mat-icon>
-		</button>
+
 		
 	</mat-expansion-panel-header>
 
+	<div class="divider"></div>
 	Localbuffersize
 	<mat-slider min="128" max="12800" step="128" class="sliders"
 		[value]="codecBufferSize" (input)="codecBufferSize = $event.value">

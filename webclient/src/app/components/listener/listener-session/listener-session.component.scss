@@ -1,0 +1,29 @@
+.main {
+    margin: 10px;
+}
+
+.header_element {
+    margin: auto 0 auto 0;
+    color: black;
+}
+
+.icon_spaceing {
+    margin-right: 8px;
+}
+
+.header_volume_group {
+    margin-left: auto;
+}
+
+.header_listeners {
+    color: grey;
+}
+
+.divider {
+    width: 100%;
+    display: block;
+    margin: 0;
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: rgba(0,0,0,.12);
+}

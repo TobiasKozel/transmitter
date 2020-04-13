@@ -1,0 +1,36 @@
+.listening_to {
+    height: 20px;
+}
+
+.no_connections {
+    div {
+        margin: auto;
+        width: 200px;
+        padding: 158px;
+        color: grey;
+    }
+    width: 100%;
+    height: 68px;
+}
+
+.listener_scroll {
+    overflow-y: auto;
+    height: calc(100% - 84px);
+}
+
+.connect_bar {
+    width: 100%;
+
+    .centered {
+        margin: auto;
+        width: 60%;
+        .form {
+            width: 80%;
+        }
+        
+        .button {
+            margin-left: 10px
+        }
+
+    }
+}

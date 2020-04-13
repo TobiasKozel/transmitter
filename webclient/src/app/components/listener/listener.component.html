@@ -1,16 +1,27 @@
 <div class="tab_content">
-    <app-listener-session *ngFor="let i of sessionProvider.sessions" [session]="i">
+    <span class="listening_to">
+        You're listening to:
+    </span>
+    <div class="listener_scroll">
+        <div class="no_connections" *ngIf="sessionProvider.sessions.length === 0">
+            <div>Nothing at all...</div>
+        </div>
+        <app-listener-session *ngFor="let i of sessionProvider.sessions" [session]="i">
+    
+        </app-listener-session>
 
-    </app-listener-session>
+    </div>
 
-    <div>
-        <mat-form-field class="address_input">
-            <input matInput placeholder="Enter a address of a broadcast to start listening" #address_input>
-        </mat-form-field>
-
-        <button color="primary" mat-raised-button (click)="connect(address_input.value)"
-                class="address_connect_button">
-            <mat-icon>play_arrow</mat-icon>
-        </button>
+    <div class="connect_bar">
+        <div class="centered">
+            <mat-form-field class="form">
+                <input matInput placeholder="Enter a address of a broadcast to start listening" #address_input>
+            </mat-form-field>
+    
+            <button color="primary" mat-raised-button (click)="connect(address_input.value)"
+                    class="button">
+                <mat-icon>play_arrow</mat-icon>
+            </button>
+        </div>
     </div>
 </div>

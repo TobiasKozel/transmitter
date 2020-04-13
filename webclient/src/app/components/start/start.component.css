@@ -17,3 +17,11 @@
     margin: auto;
     overflow: auto;
 }
+
+::ng-deep .main .mat-tab-group {
+    height: 100%;
+}
+
+::ng-deep .main .mat-tab-group .mat-tab-body-wrapper {
+    height: 100%;
+}

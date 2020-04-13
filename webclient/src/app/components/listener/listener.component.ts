@@ -1,5 +1,4 @@
 import { Component, OnInit, NgZone, OnDestroy } from '@angular/core';
-import { interval } from 'rxjs';
 import { MatSelectChange } from '@angular/material/select';
 import { environment } from 'src/environments/environment';
 import { MultiCodecService } from 'src/app/services/multi-codec.service';
@@ -9,7 +8,7 @@ import { SessionProviderService } from 'src/app/services/session-provider.servic
 @Component({
 	selector: 'app-listener',
 	templateUrl: './listener.component.html',
-	styleUrls: ['./listener.component.css']
+	styleUrls: ['./listener.component.scss']
 })
 export class ListenerComponent implements OnInit, OnDestroy {
 

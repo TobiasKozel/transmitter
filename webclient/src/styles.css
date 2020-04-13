@@ -90,6 +90,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 .tab_content {
     margin-top: 10px;
+    height: calc(100% - 10px);
 }
 
 .panel {
