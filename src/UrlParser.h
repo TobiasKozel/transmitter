@@ -7,8 +7,9 @@
 
 namespace transmitter {
   /**
-   * Ripped from. Pimped slightly to also output port and validity
+   * Ripped from
    * https://stackoverflow.com/a/2616217
+   * Pimped slightly to also output port and validity
    */
   struct URLParser {
     std::string protocol, host, path, query;

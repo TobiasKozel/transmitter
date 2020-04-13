@@ -31,7 +31,7 @@ const API = {
 		key: fs.readFileSync("./cert/privkey.pem"),
 		cert: fs.readFileSync("./cert/cert.pem")
 	},
-	TIME_OUT: 20, // time in seconds clients with no sign of beeing alived will be timed out after
+	TIME_OUT: 20, // time in seconds clients with no sign of beeing alive will be timed out after
 	TIME_OUT_INTERVAL: 5 // Time in seconds to update the timeout
 };
 
@@ -286,17 +286,27 @@ function disconnectClient(selfId) {
  */
 const handleAPIRequest = function(req, res) {
 	const parsed = url.parse(req.url, true);
+	const id = parsed.query["id"];
 	const pathname = parsed.pathname;
 	var response = { type: "not_set" };
 
 	if ("/keep_alive" === pathname) {
-
+		for (let i of clients) {
+			if (i.id === id) {
+				i.timeOut = 0;
+			}
+		}
 	}
 
 	if ("/get_status" === pathname) {
 		response.type = "return_status";
-		response.session_valid = true;
-		response.listeners = 0;
+		let listeners = 0;
+		for (let i of connections) {
+			if (i.from.id === id) {
+				listeners++;
+			}
+		}
+		response.listeners = listeners;
 	}
 
 	if ("/get_api_info" === pathname) {
@@ -310,7 +320,7 @@ const handleAPIRequest = function(req, res) {
 	 */
 	if ("/get_id" === pathname) {
 		response.type = "return_id";
-		response.id = registerClient(parsed.query["port"], UTIL.ipFromReq(req), parsed.query["id"]);
+		response.id = registerClient(parsed.query["port"], UTIL.ipFromReq(req), id);
 	}
 
 	/**
@@ -318,7 +328,7 @@ const handleAPIRequest = function(req, res) {
 	 */
 	if ("/connect_as_listener" === pathname) {
 		response.type = "connection_result";
-		response.success = startListenTo(parsed.query["id"], parsed.query["peer"]);
+		response.success = startListenTo(id, parsed.query["peer"]);
 	}
 
 	res.writeHead(200, {"Content-Type": "text/html"});
@@ -348,7 +358,7 @@ wssServer.on("connection", (ws, request, client) => {
 	ws.on("close", () => {
 		// TODO get rid of the client from this connection
 		debugger;
-    });
+	});
 });
 
 /**

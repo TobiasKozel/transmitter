@@ -23,11 +23,9 @@ export class ListenerComponent implements OnInit, OnDestroy {
 
 	player: ScriptProcessorNode;
 	gainNode: GainNode;
-	codecInstance: MultiCodec = undefined;
 
 	constructor(
-		private zone: NgZone,
-		public codecProvider: MultiCodecService
+		private zone: NgZone
 	) {
 	}
 
@@ -36,13 +34,9 @@ export class ListenerComponent implements OnInit, OnDestroy {
 			(window as any).DEBUGListener = this;
 			// this.play();
 		}
-		this.codecProvider.contructCodec((codec) => {
-			this.codecInstance = codec;
-		});
 	}
 
 	ngOnDestroy() {
-		this.codecProvider.destroyCodec(this.codecInstance);
 	}
 
 	play() {
@@ -58,14 +52,14 @@ export class ListenerComponent implements OnInit, OnDestroy {
 
 		this.zone.runOutsideAngular(() => {
 			this.player.onaudioprocess = (outSignal) => {
-				if (!this.codecInstance) { return; }
-				this.codecInstance.popSamples(
-					[
-						outSignal.outputBuffer.getChannelData(0),
-						outSignal.outputBuffer.getChannelData(1)
-					],
-					this.bufferSize
-				);
+				// if (!this.codecInstance) { return; }
+				// this.codecInstance.popSamples(
+				// 	[
+				// 		outSignal.outputBuffer.getChannelData(0),
+				// 		outSignal.outputBuffer.getChannelData(1)
+				// 	],
+				// 	this.bufferSize
+				// );
 			};
 		});
 

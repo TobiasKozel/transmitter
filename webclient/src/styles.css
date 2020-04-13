@@ -32,12 +32,12 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     font-family: 'Material Icons';
     font-style: normal;
     font-weight: 400;
-    src: url(assets/fonts/MaterialIcons-Regular.eot); /* For IE6-8 */
+    src: url(fonts/MaterialIcons-Regular.eot); /* For IE6-8 */
     src: local('Material Icons'),
         local('MaterialIcons-Regular'),
-        url(assets/fonts/MaterialIcons-Regular.woff2) format('woff2'),
-        url(assets/fonts/MaterialIcons-Regular.woff) format('woff'),
-        url(assets/fonts/MaterialIcons-Regular.ttf) format('truetype');
+        url(fonts/MaterialIcons-Regular.woff2) format('woff2'),
+        url(fonts/MaterialIcons-Regular.woff) format('woff'),
+        url(fonts/MaterialIcons-Regular.ttf) format('truetype');
 }
 
 /* roboto-300 - latin */
@@ -45,13 +45,13 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 300;
-    src: url(assets/fonts/roboto-v20-latin-300.eot); /* IE9 Compat Modes */
+    src: url(fonts/roboto-v20-latin-300.eot); /* IE9 Compat Modes */
     src: local('Roboto Light'), local('Roboto-Light'),
-        url(assets/fonts/roboto-v20-latin-300.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
-        url(assets/fonts/roboto-v20-latin-300.woff2) format('woff2'), /* Super Modern Browsers */
-        url(assets/fonts/roboto-v20-latin-300.woff) format('woff'), /* Modern Browsers */
-        url(assets/fonts/roboto-v20-latin-300.ttf) format('truetype'), /* Safari, Android, iOS */
-        url(assets/fonts/roboto-v20-latin-300.svg#Roboto) format('svg'); /* Legacy iOS */
+        url(fonts/roboto-v20-latin-300.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
+        url(fonts/roboto-v20-latin-300.woff2) format('woff2'), /* Super Modern Browsers */
+        url(fonts/roboto-v20-latin-300.woff) format('woff'), /* Modern Browsers */
+        url(fonts/roboto-v20-latin-300.ttf) format('truetype'), /* Safari, Android, iOS */
+        url(fonts/roboto-v20-latin-300.svg#Roboto) format('svg'); /* Legacy iOS */
 }
   
  /* roboto-regular - latin */
@@ -59,13 +59,13 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 400;
-    src: url(assets/fonts/roboto-v20-latin-regular.eot); /* IE9 Compat Modes */
+    src: url(fonts/roboto-v20-latin-regular.eot); /* IE9 Compat Modes */
     src: local('Roboto'), local('Roboto-Regular'),
-        url(assets/fonts/roboto-v20-latin-regular.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
-        url(assets/fonts/roboto-v20-latin-regular.woff2) format('woff2'), /* Super Modern Browsers */
-        url(assets/fonts/roboto-v20-latin-regular.woff) format('woff'), /* Modern Browsers */
-        url(assets/fonts/roboto-v20-latin-regular.ttf) format('truetype'), /* Safari, Android, iOS */
-        url(assets/fonts/roboto-v20-latin-regular.svg#Roboto) format('svg'); /* Legacy iOS */
+        url(fonts/roboto-v20-latin-regular.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
+        url(fonts/roboto-v20-latin-regular.woff2) format('woff2'), /* Super Modern Browsers */
+        url(fonts/roboto-v20-latin-regular.woff) format('woff'), /* Modern Browsers */
+        url(fonts/roboto-v20-latin-regular.ttf) format('truetype'), /* Safari, Android, iOS */
+        url(fonts/roboto-v20-latin-regular.svg#Roboto) format('svg'); /* Legacy iOS */
  }
   
 /* roboto-500 - latin */
@@ -73,13 +73,13 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 500;
-    src: url(assets/fonts/roboto-v20-latin-500.eot); /* IE9 Compat Modes */
+    src: url(fonts/roboto-v20-latin-500.eot); /* IE9 Compat Modes */
     src: local('Roboto Medium'), local('Roboto-Medium'),
-        url(assets/fonts/roboto-v20-latin-500.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
-        url(assets/fonts/roboto-v20-latin-500.woff2) format('woff2'), /* Super Modern Browsers */
-        url(assets/fonts/roboto-v20-latin-500.woff) format('woff'), /* Modern Browsers */
-        url(assets/fonts/roboto-v20-latin-500.ttf) format('truetype'), /* Safari, Android, iOS */
-        url(assets/fonts/roboto-v20-latin-500.svg#Roboto) format('svg'); /* Legacy iOS */
+        url(fonts/roboto-v20-latin-500.eot?#iefix) format('embedded-opentype'), /* IE6-IE8 */
+        url(fonts/roboto-v20-latin-500.woff2) format('woff2'), /* Super Modern Browsers */
+        url(fonts/roboto-v20-latin-500.woff) format('woff'), /* Modern Browsers */
+        url(fonts/roboto-v20-latin-500.ttf) format('truetype'), /* Safari, Android, iOS */
+        url(fonts/roboto-v20-latin-500.svg#Roboto) format('svg'); /* Legacy iOS */
 }
   
 
