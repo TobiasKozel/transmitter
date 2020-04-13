@@ -78,6 +78,7 @@ class FloatBuffer {
 class CharBuffer {
     private ptr: number = 0;
     private arr: Uint8Array = undefined;
+    
     constructor(private length) {
         this.ptr = Module._malloc(length);
         this.arr = Module.HEAPU8.subarray(this.ptr, this.ptr + length);
@@ -118,6 +119,7 @@ export class MultiCodec {
     private bufferEncode: FloatBuffer = undefined;
     private packetDecode: CharBuffer = undefined;
     private packetEncode: CharBuffer = undefined;
+
     constructor() {
         this.emMultiCodec = new Module.MultiCodec();
 
@@ -172,6 +174,7 @@ export class MultiCodec {
         this.bufferEncode.destroy();
         this.packetDecode.destroy();
         this.packetEncode.destroy();
+
         if (!environment.production) {
             for (let i in (<any>window).DEBUGcodecs) {
                 if ((<any>window).DEBUGcodecs[i] === this) {

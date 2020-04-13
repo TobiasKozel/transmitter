@@ -1,47 +1,6 @@
 <div class="tab_content">
-    <div class="panel">
-        <!-- <mat-form-field class="wss_address_input">
-            <input matInput placeholder="WSS Address" [(ngModel)]="opus.wssAddress">
-        </mat-form-field> -->
-        <button color="primary"
-                mat-raised-button (click)="play()" class="connectButton">
-            <mat-icon class="icon_spacer">
-                play_arrow
-            </mat-icon>
-            Play
-        </button>
-    </div>
 
-    <div class="sideBySide">
-
-        <div class="panel bufferSettings">
-            <ng-container *ngIf="audioContext">
-                <!-- <mat-form-field>
-                    <mat-select placeholder="Device Buffersize" [ngModel]="bufferSize"
-                            (selectionChange)="bufferSizeChaned($event)">
-                        <mat-option *ngFor="let i of bufferSizeOptions" [value]="i">
-                            {{ i }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-                <br>
-                Target Latency: {{ (playbackBuffer.minLength * frameDuration) | number:'1.0-0' }}ms
-                <br>
-                <mat-slider min="0" max="48000" step="10" [(value)]="playbackBuffer.minLength" class="sliders"></mat-slider>
-                <br>
-                Max Latency: {{ (playbackBuffer.maxLength * frameDuration) | number:'1.0-0' }}ms
-                <mat-slider min="0" max="100000" step="10" [(value)]="playbackBuffer.maxLength" class="sliders"></mat-slider> -->
-            </ng-container>
-        </div>
-        <div class="panel bufferStats" *ngIf="audioContext">
-        </div>
-    </div>
-
-    <div class="panel" *ngIf="gainNode">
-        Volume {{ (gainNode.gain.value * 100) | number:'1.0-0' }}%
-        <br>
-        <mat-slider *ngIf="gainNode" min="0" max="2" step="0.01" class="sliders"
-                [value]="gainNode.gain.value" (input)="gainNode.gain.value = $event.value">
-        </mat-slider>
+    <div>
+        
     </div>
 </div>
