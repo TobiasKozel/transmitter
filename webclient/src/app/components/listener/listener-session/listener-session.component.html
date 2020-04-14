@@ -16,12 +16,12 @@
 
 		<div class="header_element header_volume_group">
 			<button (click)="toggleMute()" mat-icon-button aria-label="Toggle mute">
-				<mat-icon *ngIf="muted">volume_off</mat-icon>
-				<mat-icon *ngIf="!muted && session.gainNode.gain.value >= 1">volume_up</mat-icon>
-				<mat-icon *ngIf="!muted && session.gainNode.gain.value < 1">volume_down</mat-icon>
+				<mat-icon *ngIf="session.muted">volume_off</mat-icon>
+				<mat-icon *ngIf="!session.muted && session.gainNode.gain.value >= 1">volume_up</mat-icon>
+				<mat-icon *ngIf="!session.muted && session.gainNode.gain.value < 1">volume_down</mat-icon>
 			</button>
 	
-			<mat-slider min="0" max="2" step="0.01" class="sliders" [disabled]="muted"
+			<mat-slider min="0" max="2" step="0.01" class="sliders" [disabled]="session.muted"
 					[value]="session.gainNode.gain.value" (input)="session.gainNode.gain.value = $event.value">
 			</mat-slider>
 		</div>

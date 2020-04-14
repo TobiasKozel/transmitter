@@ -8,8 +8,6 @@ import { ClientSession } from 'src/app/classes/ClientSession';
 	styleUrls: ['./listener-session.component.scss']
 })
 export class ListenerSessionComponent implements OnInit {
-	public muted = false;
-	
 	@Input("session") session: ClientSession;
 
 	constructor(private sessionProvider: SessionProviderService) { }
@@ -22,7 +20,7 @@ export class ListenerSessionComponent implements OnInit {
 	}
 
 	toggleMute() {
-		this.muted = !this.muted;
+		this.session.muted = !this.session.muted;
 	}
 
 }

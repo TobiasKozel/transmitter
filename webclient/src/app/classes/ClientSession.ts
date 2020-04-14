@@ -22,6 +22,8 @@ export class ClientSession {
      * The processor is connected to it and it will controll the volume
      */
     public gainNode: GainNode;
+
+    public muted = false;
     
     /**
      * Socket to send and recieve the audio data
@@ -119,6 +121,7 @@ export class ClientSession {
         };
 
         this.socket.onmessage = (message: MessageEvent) => {
+            if (this.muted) { return; }
             const packet = new Uint8Array(message.data);
             this.codecInstance.decode(packet);
         };
