@@ -5,11 +5,12 @@ import { environment } from 'src/environments/environment';
 import { ApiService } from '../services/api.service';
 
 export class ClientSession {
-    private codecInstance: MultiCodec;
+    public codecInstance: MultiCodec;
     private socket: WebSocket;
     private shutdown = false;
 
     public valid = false;
+    public error = false;
     public apiAddress = "";
     public id = "";
     public peerId = "";
@@ -35,7 +36,7 @@ export class ClientSession {
             console.log("Connected to API. Version " + info.version);
             api.getId(this).subscribe((resp) => {
                 this.id = resp.id;
-                this.peerId = url.path;
+                this.peerId = url.path.substring(1); // Trim away the slash
                 this.openSocket();
             });
         });
@@ -47,7 +48,8 @@ export class ClientSession {
     
     private openSocket() {
         if (this.socket) { return; }
-        this.socket = new WebSocket(this.apiAddress + "/" + this.id);
+        this.error = false;
+        this.socket = new WebSocket(this.apiAddress.replace("http", "ws") + "/" + this.id);
         this.socket.binaryType = "arraybuffer";
         console.log("Socket connection opened");
         this.socket.onclose = () => {
@@ -62,6 +64,7 @@ export class ClientSession {
         this.socket.onerror = (error) => {
             console.error("Socket error!");
             console.error(error);
+            this.error = true;
         };
 
         this.socket.onopen = () => {

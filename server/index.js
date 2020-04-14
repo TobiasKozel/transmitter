@@ -122,6 +122,9 @@ class Client {
 		/**
 		 * If it's a wesocket connection
 		 */
+		/**
+		 * @type WebSocket
+		 */
 		this.webSocket = null;
 		this.timeOut = 0;
 	}
@@ -165,7 +168,7 @@ function handleOpusPacket(packet, port, address) {
 				if (connection.from === from) {
 					connection.to.timeOut = 0;
 					if (connection.to.webSocket) {
-						// todo
+						connection.to.webSocket.send(packet);
 					} else {
 						udp4.send(packet, connection.to.port, connection.to.ip);
 					}
@@ -330,7 +333,7 @@ const handleAPIRequest = function(req, res) {
 		response.type = "connection_result";
 		response.success = startListenTo(id, parsed.query["peer"]);
 	}
-
+	res.setHeader("Access-Control-Allow-Origin", "*");
 	res.writeHead(200, {"Content-Type": "text/html"});
 	res.end(JSON.stringify(response));
 };
@@ -346,18 +349,29 @@ wssServer.on("listening", () => {
 	UTIL.log("WSS server started on " + API.PORT);
 });
 
-wssServer.on("connection", (ws, request, client) => {
-	// TODO need to find the correct client first
-	debugger;
+wssServer.on("connection", (ws, request) => {
+	let client;
+	for (let i of clients) {
+		if (i.id === request.url.substring(1)) {
+			client = i;
+			break;
+		}
+	}
+
+	if (!client) {
+		ws.close();
+		return;
+	}
+
+	client.webSocket = ws;
+
 	ws.on("message", (message) => {
-		// TODO send the packet to all the, not a priority
-		let test = client;
-		debugger;
-		handleOpusPacket(message, 0, 0);
+		// let test = client;
+		// debugger;
+		// handleOpusPacket(message, 0, 0);
 	});
 	ws.on("close", () => {
-		// TODO get rid of the client from this connection
-		debugger;
+		disconnectClient(client.id);
 	});
 });
 

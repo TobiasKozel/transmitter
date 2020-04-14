@@ -34,6 +34,7 @@ export class ListenerComponent implements OnInit, OnDestroy {
 			(window as any).DEBUGListener = this;
 			// this.play();
 		}
+		this.play();
 	}
 
 	ngOnDestroy() {
@@ -57,14 +58,16 @@ export class ListenerComponent implements OnInit, OnDestroy {
 
 		this.zone.runOutsideAngular(() => {
 			this.player.onaudioprocess = (outSignal) => {
-				// if (!this.codecInstance) { return; }
-				// this.codecInstance.popSamples(
-				// 	[
-				// 		outSignal.outputBuffer.getChannelData(0),
-				// 		outSignal.outputBuffer.getChannelData(1)
-				// 	],
-				// 	this.bufferSize
-				// );
+				const s = this.sessionProvider.sessions[0];
+				if (s && s.valid) {
+					s.codecInstance.popSamples(
+						[
+							outSignal.outputBuffer.getChannelData(0),
+							outSignal.outputBuffer.getChannelData(1)
+						],
+						this.bufferSize
+					);
+				}
 			};
 		});
 

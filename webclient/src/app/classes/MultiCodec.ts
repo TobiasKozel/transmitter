@@ -54,7 +54,7 @@ class FloatBuffer {
      */
     public get(buf: Float32Array[]) {
         for (let i = 0; i < Math.min(buf.length, this.channels); i++) {
-            buf[i].set(this.sampleArrays[i]);
+            buf[i].set(this.sampleArrays[i].subarray(0, buf[0].length));
         }
     }
 
