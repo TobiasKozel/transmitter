@@ -11,18 +11,6 @@ import { SessionProviderService } from 'src/app/services/session-provider.servic
 })
 export class ListenerComponent implements OnInit, OnDestroy {
 
-	bufferSize = 512;
-	volume = 0.5;
-
-	bufferSizeOptions: number[] = [
-		256, 512, 1024, 2048, 4096
-	];
-
-	
-
-	player: ScriptProcessorNode;
-	gainNode: GainNode;
-
 	constructor(
 		public sessionProvider: SessionProviderService
 	) {
@@ -31,9 +19,7 @@ export class ListenerComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		if (!environment.production) {
 			(window as any).DEBUGListener = this;
-			// this.play();
 		}
-		this.play();
 	}
 
 	ngOnDestroy() {
@@ -42,49 +28,6 @@ export class ListenerComponent implements OnInit, OnDestroy {
 	connect(address: string) {
 		console.log(address);
 		this.sessionProvider.createSession(address);
-	}
-
-	play() {
-
-		// if (!this.player) {
-		// 	this.player = this.audioContext.createScriptProcessor(
-		// 		this.bufferSize, 2, 2
-		// 	);
-		// }
-
-		// this.zone.runOutsideAngular(() => {
-		// 	this.player.onaudioprocess = (outSignal) => {
-		// 		const s = this.sessionProvider.sessions[0];
-		// 		if (s && s.valid) {
-		// 			s.codecInstance.popSamples(
-		// 				[
-		// 					outSignal.outputBuffer.getChannelData(0),
-		// 					outSignal.outputBuffer.getChannelData(1)
-		// 				],
-		// 				this.bufferSize
-		// 			);
-		// 		}
-		// 	};
-		// });
-
-		// if (!this.gainNode) {
-		// 	this.gainNode = this.audioContext.createGain();
-		// }
-
-		// this.player.connect(this.gainNode);
-		// this.gainNode.connect(this.audioContext.destination);
-	}
-
-	stop() {
-
-	}
-
-	bufferSizeChaned(event: MatSelectChange) {
-		this.bufferSize = event.value;
-		this.stop();
-		this.player.disconnect();
-		this.player = null;
-		this.play();
 	}
 
 }

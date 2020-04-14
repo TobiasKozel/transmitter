@@ -9,6 +9,7 @@ import { ListenerComponent } from './components/listener/listener.component';
 import { StartComponent } from './components/start/start.component';
 import { MaterialModule } from "./../material.module";
 import { ListenerSessionComponent } from './components/listener/listener-session/listener-session.component';
+import { PopupComponent } from './components/popup/popup.component';
 
 @NgModule({
 	declarations: [
@@ -16,6 +17,7 @@ import { ListenerSessionComponent } from './components/listener/listener-session
 		ListenerComponent,
 		StartComponent,
 		ListenerSessionComponent,
+		PopupComponent
 	],
 	imports: [
 		HttpClientModule,

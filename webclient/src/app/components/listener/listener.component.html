@@ -1,3 +1,14 @@
+<app-popup [open]="sessionProvider.autoStartSession !== ''" (closed)="sessionProvider.autoStartSession = ''" #startpopup>
+    <h2>Do you want to start listening to {{ sessionProvider.autoStartSession }} ?</h2>
+    <button color="primary" mat-raised-button 
+            (click)="sessionProvider.createSession(sessionProvider.autoStartSession); startpopup.closeModal()">
+        yes
+    </button>
+    <button mat-button (click)="startpopup.closeModal()">
+        njed
+    </button>
+</app-popup>
+
 <div class="tab_content">
     <span class="listening_to">
         You're listening to:

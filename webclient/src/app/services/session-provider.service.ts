@@ -11,6 +11,8 @@ export class SessionProviderService implements OnDestroy {
 	private audioContext: AudioContext;
 	private deviceBufferSize = 512;
 
+	public autoStartSession = "";
+
 
 	/**
 	 * UI bound
@@ -20,11 +22,13 @@ export class SessionProviderService implements OnDestroy {
 		private wasm: WasmLoaderService,
 		private api: ApiService
 	) {
-		this.setUpAudioContext();
 		/**
 		 * Try decoding the url since it may contain a peer id
 		 */
-		this.createSession(window.location.href);
+		const url = window.location.href;
+		if (url.search("!") !== -1) {
+			this.autoStartSession = window.location.href;
+		}
 
 	}
 
@@ -33,6 +37,16 @@ export class SessionProviderService implements OnDestroy {
 	 * @param url the url which will be checked beofre creating the session
 	 */
 	createSession(url: string) {
+		if (!this.audioContext) {
+			/**
+			 * The audio context needs to be created from some kind of user interaction
+			 * like a click on an element. That's why it's setup here
+			 */
+			this.setUpAudioContext(() => {
+				this.createSession(url);
+			});
+			return;
+		}
 		if (url.search("!") === -1) { return; }
 		this.wasm.constructURLParser(url, (parsed) => {
 			if (parsed.valid) {
@@ -90,7 +104,7 @@ export class SessionProviderService implements OnDestroy {
 	 * does a clean up if there was already a context
 	 * so it can be called to update a change in deviceBufferSize
 	 */
-	private setUpAudioContext() {
+	private setUpAudioContext(callback: () => void = null) {
 		let cleanup = this.cleanUpAudioContext();
 		const setup = () => {
 			this.audioContext = new AudioContext(
@@ -98,6 +112,9 @@ export class SessionProviderService implements OnDestroy {
 			);
 			for (let i of this.sessions) {
 				this.setUpClientAudioConext(i);
+			}
+			if (callback) {
+				callback();
 			}
 		};
 		if (cleanup) {
