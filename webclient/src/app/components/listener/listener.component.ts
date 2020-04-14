@@ -18,13 +18,12 @@ export class ListenerComponent implements OnInit, OnDestroy {
 		256, 512, 1024, 2048, 4096
 	];
 
-	audioContext: AudioContext;
+	
 
 	player: ScriptProcessorNode;
 	gainNode: GainNode;
 
 	constructor(
-		private zone: NgZone,
 		public sessionProvider: SessionProviderService
 	) {
 	}
@@ -46,37 +45,34 @@ export class ListenerComponent implements OnInit, OnDestroy {
 	}
 
 	play() {
-		if (!this.audioContext) {
-			this.audioContext = new AudioContext();
-		}
 
-		if (!this.player) {
-			this.player = this.audioContext.createScriptProcessor(
-				this.bufferSize, 2, 2
-			);
-		}
+		// if (!this.player) {
+		// 	this.player = this.audioContext.createScriptProcessor(
+		// 		this.bufferSize, 2, 2
+		// 	);
+		// }
 
-		this.zone.runOutsideAngular(() => {
-			this.player.onaudioprocess = (outSignal) => {
-				const s = this.sessionProvider.sessions[0];
-				if (s && s.valid) {
-					s.codecInstance.popSamples(
-						[
-							outSignal.outputBuffer.getChannelData(0),
-							outSignal.outputBuffer.getChannelData(1)
-						],
-						this.bufferSize
-					);
-				}
-			};
-		});
+		// this.zone.runOutsideAngular(() => {
+		// 	this.player.onaudioprocess = (outSignal) => {
+		// 		const s = this.sessionProvider.sessions[0];
+		// 		if (s && s.valid) {
+		// 			s.codecInstance.popSamples(
+		// 				[
+		// 					outSignal.outputBuffer.getChannelData(0),
+		// 					outSignal.outputBuffer.getChannelData(1)
+		// 				],
+		// 				this.bufferSize
+		// 			);
+		// 		}
+		// 	};
+		// });
 
-		if (!this.gainNode) {
-			this.gainNode = this.audioContext.createGain();
-		}
+		// if (!this.gainNode) {
+		// 	this.gainNode = this.audioContext.createGain();
+		// }
 
-		this.player.connect(this.gainNode);
-		this.gainNode.connect(this.audioContext.destination);
+		// this.player.connect(this.gainNode);
+		// this.gainNode.connect(this.audioContext.destination);
 	}
 
 	stop() {

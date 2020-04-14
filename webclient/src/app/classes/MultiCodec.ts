@@ -52,9 +52,9 @@ class FloatBuffer {
      * Copy out the audio
      * @param buf The arrays to store the result in
      */
-    public get(buf: Float32Array[]) {
+    public get(buf: Float32Array[], count: number) {
         for (let i = 0; i < Math.min(buf.length, this.channels); i++) {
-            buf[i].set(this.sampleArrays[i].subarray(0, buf[0].length));
+            buf[i].set(this.sampleArrays[i].subarray(0, count));
         }
     }
 
@@ -167,7 +167,7 @@ export class MultiCodec {
      */
     public popSamples(buf: Float32Array[], requestedSamples: number) {
         this.emMultiCodec.popSamples(this.bufferDecode.getPtr(), requestedSamples);
-        this.bufferDecode.get(buf);
+        this.bufferDecode.get(buf, requestedSamples);
     }
 
     public setBufferSize(size: number) {

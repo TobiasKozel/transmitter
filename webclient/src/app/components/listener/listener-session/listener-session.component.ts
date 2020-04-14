@@ -9,13 +9,12 @@ import { ClientSession } from 'src/app/classes/ClientSession';
 })
 export class ListenerSessionComponent implements OnInit {
 	public muted = false;
-	public volume = 1.0;
 	
 	@Input("session") session: ClientSession;
 
 	constructor(private sessionProvider: SessionProviderService) { }
 
-	ngOnInit(): void {
+	ngOnInit() {
 	}
 
 	close() {
