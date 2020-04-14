@@ -2,9 +2,9 @@ const http = require("http");
 const https = require("https");
 const fs = require("fs");
 const ws = require("ws");
-const WSOPEN = ws.OPEN;
 const WebSocketServer = ws.Server;
-var url = require("url");
+const url = require("url");
+const NodeStatic = require('node-static');
 
 const dgram = require("dgram");
 const udp4 = dgram.createSocket("udp4");
@@ -282,6 +282,8 @@ function disconnectClient(selfId) {
 	}
 }
 
+var staticServer = new NodeStatic.Server('./static');
+
 /**
  * The main API server handler
  * @param {http.IncomingMessage} req
@@ -292,6 +294,7 @@ const handleAPIRequest = function(req, res) {
 	const id = parsed.query["id"];
 	const pathname = parsed.pathname;
 	var response = { type: "not_set" };
+	var apiHandled = false;
 
 	if ("/keep_alive" === pathname) {
 		for (let i of clients) {
@@ -299,6 +302,7 @@ const handleAPIRequest = function(req, res) {
 				i.timeOut = 0;
 			}
 		}
+		apiHandled = true;
 	}
 
 	if ("/get_status" === pathname) {
@@ -310,12 +314,14 @@ const handleAPIRequest = function(req, res) {
 			}
 		}
 		response.listeners = listeners;
+		apiHandled = true;
 	}
 
 	if ("/get_api_info" === pathname) {
 		response.type = "return_api_info";
 		response.port = API.UDP_PORT;
 		response.version = API.VERSION;
+		apiHandled = true;
 	}
 
 	/**
@@ -324,6 +330,7 @@ const handleAPIRequest = function(req, res) {
 	if ("/get_id" === pathname) {
 		response.type = "return_id";
 		response.id = registerClient(parsed.query["port"], UTIL.ipFromReq(req), id);
+		apiHandled = true;
 	}
 
 	/**
@@ -332,10 +339,24 @@ const handleAPIRequest = function(req, res) {
 	if ("/connect_as_listener" === pathname) {
 		response.type = "connection_result";
 		response.success = startListenTo(id, parsed.query["peer"]);
+		apiHandled = true;
 	}
-	res.setHeader("Access-Control-Allow-Origin", "*");
-	res.writeHead(200, {"Content-Type": "text/html"});
-	res.end(JSON.stringify(response));
+
+	if (apiHandled)
+	{
+		res.setHeader("Access-Control-Allow-Origin", "*");
+		res.writeHead(200, {"Content-Type": "text/html"});
+		res.end(JSON.stringify(response));
+		return;
+	}
+
+	if (req.url.search("!") !== -1) {
+		req.url = "/"; // Trim away the id used to quick connect a peer
+	}
+	
+	req.addListener("end", function () {
+        staticServer.serve(req, res);
+    }).resume();
 };
 
 let apiServer = https.createServer(API.CREDENTIALS, handleAPIRequest).listen(API.PORT);
