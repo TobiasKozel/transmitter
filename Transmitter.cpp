@@ -43,7 +43,7 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
       if (!isUp) { // Only handle key down
         if (key.S) { // Check modifiers like shift first
           if (key.VK == iplug::kVK_C) {
-            mGraphics->SetTextInClipboard(mMasterId->GetStr());
+            mGraphics->SetTextInClipboard(mMasterId->GetLabelString());
             return true;
           }
           if (key.VK == iplug::kVK_V) {
@@ -103,7 +103,23 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
       connect(true);
     }, "Connect"));
 
-    mMasterId = new ITextControl(left.SubRectVertical(2, 1), "Connect first to receive an ID.");
+    
+
+    mMasterId = new IVButtonControl2(
+      left.SubRectVertical(2, 1), [&](IControl* pCaller) {
+        ::SplashClickActionFunc(pCaller);
+        auto button = dynamic_cast<IVButtonControl2*>(pCaller);
+        const char* url = button->GetLabelString();
+        if (strncmp(url, STR_OWNID_HINT, 30) == 0) {
+          return;
+        }
+        GetUI()->SetTextInClipboard(button->GetLabelString());
+        GetUI()->OpenURL(button->GetLabelString());
+        GetUI()->ReleaseMouseCapture();
+      },
+      mMSession ? mMSession->getOwnAddress() : STR_OWNID_HINT
+    );
+
     mMainTab.Add(mMasterId);
 
     mMainTab.Add(new IVButtonControl(right.SubRectVertical(2, 1), [&](IControl* pCaller) {
@@ -205,6 +221,10 @@ void Transmitter::switchTab(bool directTab) {
   }
   mMainTabButton->SetStyle(!directTab ? style::TAB_TEXT_ACTIVE : style::TAB_TEXT_INACTIVE);
   mDirectTabButton->SetStyle(directTab ? style::TAB_TEXT_ACTIVE : style::TAB_TEXT_INACTIVE);
+  if (directTab) {
+    delete mMSession;
+    mMSession = nullptr;
+  }
   mGraphics->SetAllControlsDirty();
 }
 
@@ -249,10 +269,10 @@ void Transmitter::connect(bool keepId) {
   }
   mMSession = new MasterServerSession(mMasterServer->GetLabelString(), keepId ? id : "");
   if (mMSession->getError()) {
-    mMasterId->SetStr("Couldn't connect to the Masterserver!");
+    mMasterId->SetLabelStr("Couldn't connect to the Masterserver!");
   }
   else {
-    mMasterId->SetStr(mMSession->getOwnAddress());
+    mMasterId->SetLabelStr(mMSession->getOwnAddress());
   }
 }
 

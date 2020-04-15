@@ -18,6 +18,7 @@ namespace transmitter {
     iplug::igraphics::SplashClickActionFunc(pCaller);
   }
   typedef iplug::IParam IParam;
+  typedef iplug::igraphics::IURLControl IURLControl;
   typedef iplug::igraphics::ITextControl ITextControl;
   typedef iplug::igraphics::ICaptionControl ICaptionControl;
   typedef iplug::igraphics::IKnobControlBase  IKnobControlBase;

@@ -328,6 +328,7 @@
     <ClInclude Include="..\src\AudioCommunicator.h" />
     <ClInclude Include="..\src\CodecRAW.h" />
     <ClInclude Include="..\src\CodecVBAN.h" />
+    <ClInclude Include="..\src\DirectConnection.h" />
     <ClInclude Include="..\src\GUIStyle.h" />
     <ClInclude Include="..\src\CodecOpus.h" />
     <ClInclude Include="..\src\MasterServerSession.h" />

@@ -44,7 +44,7 @@ class Transmitter final : public iplug::Plugin {
   iplug::igraphics::IGraphics* mGraphics = nullptr;
   transmitter::TextControl* mMasterServer = nullptr;
   transmitter::TextControl* mMasterPeer = nullptr;
-  transmitter::ITextControl* mMasterId = nullptr;
+  transmitter::IVButtonControl2* mMasterId = nullptr;
   transmitter::ITextControl* mOwnIp = nullptr;
   transmitter::TextControl* mDirectPeer = nullptr;
   int mMaxBlockSize = 512;

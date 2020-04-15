@@ -16,4 +16,12 @@ namespace transmitter {
       return mLabelStr.Get();
     }
   };
+
+  class IVButtonControl2 : public IVButtonControl {
+  public:
+    IVButtonControl2(const IRECT& bounds, IActionFunction aF = SplashClickActionFunc, const char* label = "") :IVButtonControl(bounds, aF, label) {}
+    const char* GetLabelString() {
+      return mLabelStr.Get();
+    }
+  };
 }

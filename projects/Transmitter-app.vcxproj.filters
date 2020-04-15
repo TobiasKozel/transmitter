@@ -351,6 +351,9 @@
     <ClInclude Include="..\src\SaneResampler.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\DirectConnection.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">
