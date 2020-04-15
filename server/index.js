@@ -414,7 +414,13 @@ udp4.bind(API.UDP_PORT);
  */
 setInterval(() => {
 	for (let i of clients) {
-		i.timeOut += API.TIME_OUT_INTERVAL;
+		if (!i.webSocket) {
+			/**
+			 * only time out udp connections since websockets
+			 * have a connection close callback
+			 */
+			i.timeOut += API.TIME_OUT_INTERVAL;
+		}
 		if (i.timeOut > API.TIME_OUT) {
 			disconnectClient(i.id);
 		}

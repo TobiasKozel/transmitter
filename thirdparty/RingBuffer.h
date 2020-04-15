@@ -126,4 +126,48 @@ namespace transmitter {
       return mHead;
     }
   };
+
+  template <typename T, int channels>
+  class MultiRingBuffer {
+    RingBuffer<T> mBuffers[channels];
+  public:
+  	
+    void setSize(const int size) {
+      for (int c = 0; c < channels; c++) {
+        mBuffers[c].setSize(size);
+      }
+    }
+
+    int peek(T** out, int elements, int offset = 0) {
+      int ret;
+      for (int c = 0; c < channels; c++) {
+        ret = mBuffers[c].peek(out[c], elements, offset);
+      }
+      return ret;
+    }
+
+    int get(T** out, const int elements) {
+      int ret;
+      for (int c = 0; c < channels; c++) {
+        ret = mBuffers[c].get(out[c], elements);
+      }
+      return ret;
+    }
+  	
+    int add(T** in, int elements) {
+      int ret;
+    	for (int c = 0; c < channels; c++) {
+			ret = mBuffers[c].add(in[c], elements);
+    	}
+      return ret;
+    }
+
+    int nFree() const {
+      return mBuffers[0].nFree();
+    }
+
+    int inBuffer() const {
+      return mBuffers[0].inBuffer();
+    }
+  };
 }

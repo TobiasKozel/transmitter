@@ -1,4 +1,5 @@
 #include "Transmitter.h"
+
 using namespace iplug;
 #include "IPlug_include_in_plug_src.h"
 #include "IControls.h"
@@ -195,21 +196,6 @@ Transmitter::~Transmitter() {
   netlib_quit();
 }
 
-void Transmitter::connect(bool keepId) {
-  std::string id;
-  if (mMSession != nullptr) {
-    id = mMSession->getId();
-    delete mMSession;
-    mMSession = nullptr;
-  }
-  mMSession = new MasterServerSession(mMasterServer->GetLabelString(), keepId ? id : "");
-  if (mMSession->getError()) {
-    mMasterId->SetStr("Couldn't connect to the Masterserver!");
-  } else {
-    mMasterId->SetStr(mMSession->getOwnAddress());
-  }
-}
-
 void Transmitter::switchTab(bool directTab) {
   for (int i = 0; i < mDirectTab.GetSize(); i++) {
     mDirectTab.Get(i)->Hide(!directTab);
@@ -247,14 +233,68 @@ void Transmitter::OnUIClose() {
   mGraphics = nullptr;;
 }
 
+void Transmitter::connect(bool keepId) {
+  const double sr = GetSampleRate();
+  if (sr != 48000.0 && !mResaplerSetup) {
+    mRsIn.setUp(GetSampleRate(), 48000.0);
+    mRsOut.setUp(48000.0, GetSampleRate());
+    mResaplerSetup = true;
+  }
+
+  std::string id;
+  if (mMSession != nullptr) {
+    id = mMSession->getId();
+    delete mMSession;
+    mMSession = nullptr;
+  }
+  mMSession = new MasterServerSession(mMasterServer->GetLabelString(), keepId ? id : "");
+  if (mMSession->getError()) {
+    mMasterId->SetStr("Couldn't connect to the Masterserver!");
+  }
+  else {
+    mMasterId->SetStr(mMSession->getOwnAddress());
+  }
+}
+
 #if IPLUG_DSP
 void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
+  /**
+   * Process the block in smaller bits since it's too large
+   * Also abused to lower the delay a feedback node creates
+   */
+  if (nFrames > mMaxBlockSize) {
+    const int overhang = nFrames % mMaxBlockSize;
+    int s = 0;
+    while (true) {
+      for (int c = 0; c < mChannelCount; c++) {
+        mSliceBuffer[0][c] = &inputs[c][s];
+        mSliceBuffer[1][c] = &outputs[c][s];
+      }
+      s += mMaxBlockSize;
+      if (s <= nFrames) {
+        ProcessBlock(mSliceBuffer[0], mSliceBuffer[1], mMaxBlockSize);
+      }
+      else {
+        if (overhang > 0) {
+          ProcessBlock(mSliceBuffer[0], mSliceBuffer[1], overhang);
+        }
+        return;
+      }
+    }
+  }
+
   const int nChans = NOutChansConnected();
   const sample volOwn = DBToAmp(GetParam(kVolume)->Value());
   const sample volRemote = DBToAmp(GetParam(kVolumeRemote)->Value());
 
   if (mMSession != nullptr) {
-    mMSession->ProcessBlock(inputs, outputs, nFrames);
+    if (mResaplerSetup) {
+      int rsSamples2 = mRsIn.ProcessBlock(inputs, mRsIn.buffer, nFrames);
+      mMSession->ProcessBlock(mRsIn.buffer, mRsOut.buffer, rsSamples2);
+      int rsSamples = mRsOut.ProcessBlock(mRsIn.buffer, outputs, rsSamples2);
+    } else {
+      mMSession->ProcessBlock(inputs, outputs, nFrames);
+    }
   } else {
     for (int i = 0; i < nFrames; i++) {
       for (int c = 0; c < nChans; c++) {

@@ -299,6 +299,9 @@
     <ClInclude Include="..\..\..\IPlug\IPlug_include_in_plug_hdr.h" />
     <ClInclude Include="..\..\..\IPlug\IPlug_include_in_plug_src.h" />
     <ClInclude Include="..\..\..\IPlug\VST2\IPlugVST2.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\netlib.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\platform.h" />
+    <ClInclude Include="..\thirdparty\netlib\src\util.h" />
     <ClInclude Include="..\Transmitter.h" />
     <ClInclude Include="..\resources\resource.h" />
   </ItemGroup>
@@ -373,6 +376,11 @@
     <ClCompile Include="..\..\..\IPlug\IPlugProcessor.cpp" />
     <ClCompile Include="..\..\..\IPlug\IPlugTimer.cpp" />
     <ClCompile Include="..\..\..\IPlug\VST2\IPlugVST2.cpp" />
+    <ClCompile Include="..\..\..\WDL\resample.cpp" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_tcp.c" />
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_udp.c" />
     <ClCompile Include="..\Transmitter.cpp" />
   </ItemGroup>
   <ItemGroup>

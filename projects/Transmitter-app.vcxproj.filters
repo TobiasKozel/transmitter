@@ -104,6 +104,9 @@
     <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c">
       <Filter>thirdparty\netlib</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\WDL\resample.cpp">
+      <Filter>thirdparty</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Transmitter.h" />
@@ -344,6 +347,9 @@
     </ClInclude>
     <ClInclude Include="..\src\CodecRAW.h">
       <Filter>src\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SaneResampler.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

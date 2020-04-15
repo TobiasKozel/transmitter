@@ -65,6 +65,21 @@
     <ClCompile Include="..\..\..\IGraphics\Drawing\IGraphicsSkia.cpp">
       <Filter>IGraphics\Drawing</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\WDL\resample.cpp">
+      <Filter>thirdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_tcp.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\thirdparty\netlib\src\netlib_udp.c">
+      <Filter>thirdparty\netlib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../config.h" />
@@ -225,6 +240,15 @@
     <ClInclude Include="..\..\..\IPlug\IPlugPluginBase.h">
       <Filter>IPlug</Filter>
     </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\netlib.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\platform.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\netlib\src\util.h">
+      <Filter>thirdparty\netlib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="IPlug">
@@ -250,6 +274,12 @@
     </Filter>
     <Filter Include="config">
       <UniqueIdentifier>{8c338368-7512-426b-af83-0f50719ca0bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty">
+      <UniqueIdentifier>{2ca05fdb-c5cf-4ca1-a94c-3d2fca6d850b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty\netlib">
+      <UniqueIdentifier>{5810691c-42c9-4736-a483-b979df1f74ee}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
