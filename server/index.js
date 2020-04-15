@@ -8,6 +8,7 @@ const NodeStatic = require('node-static');
 
 const dgram = require("dgram");
 const udp4 = dgram.createSocket("udp4");
+const { v1: uuidv1 } = require('uuid');
 
 /**
  * API config
@@ -35,7 +36,6 @@ const API = {
 	TIME_OUT_INTERVAL: 5 // Time in seconds to update the timeout
 };
 
-var tempId = 0;
 const UTIL = {
 	/**
 	 * Will simply return a unique id
@@ -43,7 +43,7 @@ const UTIL = {
 	 * @returns {string} the generated ID
 	 */
 	generateId: function () {
-		return "!" + (tempId++);
+		return "!" + uuidv1();
 	},
 	/**
 	 * @param {?http.IncomingMessage} req The request to convert to an ip address
@@ -208,6 +208,13 @@ function registerClient(port, ip, id) {
 			}
 		}
 	}
+	for (let i of clients) {
+		if (i.ip === ip && i.port === port && port !== 0) {
+			UTIL.log("Registering same client twice");
+			return i.id;
+		}
+	}
+
 	const c = new Client(ip, port, id);
 	clients.push(c);
 	UTIL.log("Register: new client " + ip + " id " + c.id + " port " + port);

@@ -19,6 +19,7 @@
   "dependencies": {
     "minimist": ">=0.2.1",
     "node-static": "^0.7.11",
+    "uuid": "^7.0.3",
     "ws": "^7.2.3"
   }
 }
