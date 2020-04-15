@@ -315,12 +315,15 @@ const handleAPIRequest = function(req, res) {
 	if ("/get_status" === pathname) {
 		response.type = "return_status";
 		let listeners = 0;
+		let found = false;
 		for (let i of connections) {
 			if (i.from.id === id) {
+				found = true;
 				listeners++;
 			}
 		}
 		response.listeners = listeners;
+		response.valid = found;
 		apiHandled = true;
 	}
 

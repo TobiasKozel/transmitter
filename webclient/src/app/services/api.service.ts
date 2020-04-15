@@ -16,10 +16,11 @@ export class ApiService {
 	}
 
 	public updateListenerCount(s: ClientSession) {
-		this.http.get<{listeners: number}>(
+		this.http.get<{listeners: number, valid: boolean}>(
 			s.apiAddress + "/get_status?id=" + s.peerId
 		).subscribe((data) => {
 			s.views = data.listeners;
+			s.valid = data.valid;
 		});
 	}
 

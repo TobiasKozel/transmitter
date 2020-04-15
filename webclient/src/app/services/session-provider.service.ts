@@ -116,9 +116,19 @@ export class SessionProviderService implements OnDestroy {
 	private setUpAudioContext(callback: () => void = null) {
 		let cleanup = this.cleanUpAudioContext();
 		const setup = () => {
-			this.audioContext = new AudioContext(
+			let ctx = window.AudioContext
+				|| (<any>window).webkitAudioContext || false;
+			if (!ctx) {
+				console.error("Can't create an audio context!");
+				return;
+			}
+			this.audioContext = new ctx(
 				{latencyHint: "playback", sampleRate: 48000}
 			);
+			console.log("Audio context created with a samplerate of " + this.audioContext.sampleRate);
+			if (this.audioContext.sampleRate !== 48000) {
+				console.error("Did not get the desired 48000Hz samplerate. Resampling needed.");
+			}
 			for (let i of this.sessions) {
 				this.setUpClientAudioConext(i);
 			}

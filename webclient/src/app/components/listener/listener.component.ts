@@ -26,7 +26,6 @@ export class ListenerComponent implements OnInit, OnDestroy {
 	}
 
 	connect(address: string) {
-		console.log(address);
 		this.sessionProvider.createSession(address);
 	}
 
