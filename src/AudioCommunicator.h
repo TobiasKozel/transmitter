@@ -87,5 +87,9 @@ namespace transmitter {
       return mLocalPort;
     }
 
+    void setBufferSize(double size) {
+      mCodec.setBufferSize(size);
+    }
+
   };
 }

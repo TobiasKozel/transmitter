@@ -136,6 +136,13 @@ namespace transmitter {
       return mError;
     }
 
+    void setBufferSize(double size) {
+      if (mCommunicator != nullptr) {
+        mCommunicator->setBufferSize(size);
+      }
+      
+    }
+
     void ProcessBlock(sample** inputs, sample** outputs, int nFrames) const {
       if (mCommunicator != nullptr) {
         mCommunicator->ProcessBlock(inputs, outputs, nFrames);

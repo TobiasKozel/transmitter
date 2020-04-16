@@ -1,6 +1,5 @@
 #pragma once
 #include "resample.h"
-#include "../thirdparty/RingBuffer.h"
 #include "./TConfig.h"
 
 namespace transmitter {

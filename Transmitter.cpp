@@ -16,12 +16,12 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
   /**
    * Setup the controls
    */
-  GetParam(kVolume)->InitGain("Volume own", -70);
+  GetParam(kVolume)->InitGain("Volume own");
   GetParam(kVolumeRemote)->InitGain("Volume remote");
   GetParam(kBitRate)->InitDouble("Bitrate", 128, 1, 512, 0.1, "kBit/s");
   GetParam(kComplexity)->InitDouble("OPUS Complexity", 10, 0, 10, 1);
   GetParam(kPacketLoss)->InitPercentage("OPUS Expected packet loss");
-  GetParam(kBufferSize)->InitDouble("Receive Buffer Size", 960, 1, 10000, 1);
+  GetParam(kBufferSize)->InitDouble("Receive Buffer Size", 960, 16, 10000, 1);
   GetParam(kFrameSize)->InitEnum(
     "OPUS Frame Size", 1, 4, "Samples", iplug::IParam::kFlagsNone,
     "", "120", "240", "480", "960", "1920", "2880"
@@ -306,12 +306,16 @@ void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   const int nChans = NOutChansConnected();
   const sample volOwn = DBToAmp(GetParam(kVolume)->Value());
   const sample volRemote = DBToAmp(GetParam(kVolumeRemote)->Value());
+  const sample bufferSize = GetParam(kBufferSize)->Value();
+
+
 
   if (mMSession != nullptr) {
+    mMSession->setBufferSize(bufferSize);
     if (mResaplerSetup) {
       int rsSamples2 = mRsIn.ProcessBlock(inputs, mRsIn.buffer, nFrames);
       mMSession->ProcessBlock(mRsIn.buffer, mRsOut.buffer, rsSamples2);
-      int rsSamples = mRsOut.ProcessBlock(mRsIn.buffer, outputs, rsSamples2);
+      int rsSamples = mRsOut.ProcessBlock(mRsOut.buffer, outputs, rsSamples2);
     } else {
       mMSession->ProcessBlock(inputs, outputs, nFrames);
     }
