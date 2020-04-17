@@ -1,6 +1,6 @@
 #pragma once
-#include "resample.h"
 #include "./TConfig.h"
+#include "../thirdparty/HOresample.h"
 
 namespace transmitter {
   class SaneResampler {

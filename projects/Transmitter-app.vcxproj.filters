@@ -104,9 +104,6 @@
     <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c">
       <Filter>thirdparty\netlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\WDL\resample.cpp">
-      <Filter>thirdparty</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Transmitter.h" />
@@ -354,6 +351,9 @@
     <ClInclude Include="..\src\DirectConnection.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\thirdparty\HOresample.h">
+      <Filter>thirdparty</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">
@@ -416,6 +416,9 @@
     </None>
     <None Include="..\config\Transmitter-win.props">
       <Filter>config</Filter>
+    </None>
+    <None Include="..\thirdparty\HOheapbuf.h">
+      <Filter>thirdparty</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
