@@ -33,6 +33,8 @@ EMSCRIPTEN_BINDINGS() {
             })
         ).function("setBitRate",
             &MultiCodec::setBitRate
+        ).function("setSampleRate",
+            &MultiCodec::setSampleRate
         ).function("setBufferSize",
             &MultiCodec::setBufferSize
         );

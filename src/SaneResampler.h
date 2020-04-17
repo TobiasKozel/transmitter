@@ -24,16 +24,22 @@ namespace transmitter {
     }
 
     int ProcessBlock(sample** in, sample** out, int nFrames) {
-      //mBufferIn.add(in, nFrames);
-      
-      float* buf[2];
+      sample* buf[2];
+      const int n = _resamplePrepare(buf, nFrames);
+      return _resample(in, out, buf, n);
+    }
+
+    int _resamplePrepare(sample** buf, int nFrames) {
       int nl = mRs.ResamplePrepare(nFrames, 1, &buf[0]);
       int nr = mLs.ResamplePrepare(nFrames, 1, &buf[1]);
+      return nl;
+    }
 
-      memcpy(buf[0], in[0], nl * sizeof(float));
-      memcpy(buf[1], in[1], nr * sizeof(float));
-      int out1 = mLs.ResampleOut(out[0], nl, 512 * 4, 1);
-      int out2 = mRs.ResampleOut(out[1], nr, 512 * 4, 1);
+    int _resample(sample** in, sample** out, sample** buf, int n) {
+      memcpy(buf[0], in[0], n * sizeof(float));
+      memcpy(buf[1], in[1], n * sizeof(float));
+      int out1 = mLs.ResampleOut(out[0], n, 512 * 4, 1);
+      int out2 = mRs.ResampleOut(out[1], n, 512 * 4, 1);
       return out1;
     }
   };

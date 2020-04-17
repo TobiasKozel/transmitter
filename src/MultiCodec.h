@@ -3,6 +3,8 @@
 #include "./CodecOpus.h"
 #include "./CodecRAW.h"
 
+#include "./SaneResampler.h"
+
 namespace transmitter {
   /**
    * All the supported codecs will be here and
@@ -10,6 +12,12 @@ namespace transmitter {
    * based on the input
    */
   class MultiCodec {
+
+#ifdef __EMSCRIPTEN__
+    transmitter::SaneResampler mRsOut;
+    bool mResamplerSetup = false;
+#endif
+
     WrappedOpusDecoder mOpusDecoder;
     WrappedOpusEncoder mOpusEncoder;
 
@@ -54,6 +62,16 @@ namespace transmitter {
       
     }
 
+
+#ifdef __EMSCRIPTEN__
+    void setSampleRate(int sampleRate) {
+      if (sampleRate != 48000) {
+        mRsOut.setUp(48000, sampleRate);
+        mResamplerSetup = true;
+      }
+    }
+#endif
+
     int encode(float** input, int nFrames, unsigned char* output) const {
       if (mActiveEncoder == nullptr) { return 0; }
       return mActiveEncoder->encode(input, nFrames, output);
@@ -71,9 +89,27 @@ namespace transmitter {
       }
     }
 
-    int popSamples(float** outputs, int requestedSamples) const {
+    int popSamples(float** outputs, int requestedSamples) {
       if (mActiveDecoder == nullptr) { return 0; }
-      const int out = mActiveDecoder->popSamples(outputs, requestedSamples);
+      int out = 0;
+
+#ifdef __EMSCRIPTEN__
+      if (mResamplerSetup) {
+        sample* buf[2];
+        // samples needed
+        int need = mRsOut._resamplePrepare(buf, requestedSamples);
+        // samples got from the decoder
+        int got = mActiveDecoder->popSamples(mRsOut.buffer, need);
+        if (got > 0) {
+          // the actual sample count after resampling
+          out = mRsOut._resample(mRsOut.buffer, outputs, buf, need);
+        }
+      } else
+#endif
+      {
+        out = mActiveDecoder->popSamples(outputs, requestedSamples);
+      }
+
       for (int i = out; i < requestedSamples; i++) {
         for (int c = 0; c < mChannels; c++) {
           outputs[c][i] = 0; // output silence if there's nothing decoded
