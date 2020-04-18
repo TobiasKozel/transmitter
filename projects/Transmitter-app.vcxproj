@@ -342,6 +342,7 @@
     <ClInclude Include="..\thirdparty\netlib\src\netlib.h" />
     <ClInclude Include="..\thirdparty\netlib\src\platform.h" />
     <ClInclude Include="..\thirdparty\netlib\src\util.h" />
+    <ClInclude Include="..\thirdparty\RingBuffer.h" />
     <ClInclude Include="..\Transmitter.h" />
     <ClInclude Include="..\resources\resource.h" />
   </ItemGroup>

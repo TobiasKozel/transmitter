@@ -74,8 +74,7 @@ public:
     delete m_iirfilter;
   }
   // if sinc set, it overrides interp or filtercnt
-  void SetMode(bool interp, int filtercnt, bool sinc, int sinc_size = 64, int sinc_interpsize = 32)
-  {
+  void SetMode(bool interp, int filtercnt, bool sinc, int sinc_size = 64, int sinc_interpsize = 32) {
     m_filtercnt = (filtercnt <= 0 ? 0 : filtercnt >= WDL_RESAMPLE_MAX_FILTERS ? WDL_RESAMPLE_MAX_FILTERS : filtercnt);
     m_interp = interp;
 
@@ -86,11 +85,17 @@ public:
     }
   }
 
-  void SetFilterParms(float filterpos = 0.693, float filterq = 0.707) { m_filterpos = filterpos; m_filterq = filterq; } // used for filtercnt>0 but not sinc
-  void SetFeedMode(bool wantInputDriven) { m_feedmode = wantInputDriven; } // if true, that means the first parameter to ResamplePrepare will specify however much input you have, not how much you want
+  // used for filtercnt>0 but not sinc
+  void SetFilterParms(float filterpos = 0.693, float filterq = 0.707) {
+    m_filterpos = filterpos; m_filterq = filterq;
+  }
 
-  void Reset(double fracpos = 0.0)
-  {
+  // if true, that means the first parameter to ResamplePrepare will specify however much input you have, not how much you want
+  void SetFeedMode(bool wantInputDriven) {
+    m_feedmode = wantInputDriven;
+  } 
+
+  void Reset(double fracpos = 0.0) {
     m_last_requested = 0;
     m_filtlatency = 0;
     m_fracpos = fracpos;
@@ -98,8 +103,7 @@ public:
     if (m_iirfilter) m_iirfilter->Reset();
   }
 
-  void SetRates(double rate_in, double rate_out)
-  {
+  void SetRates(double rate_in, double rate_out) {
     if (rate_in < 1.0) rate_in = 1.0;
     if (rate_out < 1.0) rate_out = 1.0;
     if (rate_in != m_sratein || rate_out != m_srateout)
@@ -110,8 +114,8 @@ public:
     }
   }
 
-  double GetCurrentLatency() // amount of input that has been received but not yet converted to output, in seconds
-  {
+  // amount of input that has been received but not yet converted to output, in seconds
+  double GetCurrentLatency()  {
     double v = ((double)m_samples_in_rsinbuf - m_filtlatency) / m_sratein;
 
     if (v < 0.0)v = 0.0;
@@ -121,8 +125,7 @@ public:
   // req_samples is output samples desired if !wantInputDriven, or if wantInputDriven is input samples that we have
   // returns number of samples desired (put these into *inbuffer)
   // note that it is safe to call ResamplePrepare without calling ResampleOut (the next call of ResamplePrepare will function as normal)
-  int ResamplePrepare(int out_samples, int nch, WDL_ResampleSample** inbuffer)
-  {
+  int ResamplePrepare(int out_samples, int nch, WDL_ResampleSample** inbuffer) {
     if (nch > WDL_RESAMPLE_MAX_NCH || nch < 1) return 0;
 
     int fsize = 0;
@@ -173,12 +176,8 @@ public:
   // if numsamples_in < the value return by ResamplePrepare(), then it will be flushed to produce all remaining valid samples
   // do NOT call with nsamples_in greater than the value returned from resamplerprpare()! the extra samples will be ignored.
   // returns number of samples successfully outputted to out
-  int ResampleOut(WDL_ResampleSample* out, int nsamples_in, int nsamples_out, int nch)
-  {
+  int ResampleOut(WDL_ResampleSample* out, int nsamples_in, int nsamples_out, int nch) {
     if (nch > WDL_RESAMPLE_MAX_NCH || nch < 1) return 0;
-#ifdef WDL_DENORMAL_WANTS_SCOPED_FTZ
-    WDL_denormal_ftz_scope ftz_force;
-#endif
 
     if (m_filtercnt > 0)
     {

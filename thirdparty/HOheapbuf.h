@@ -9,10 +9,15 @@ namespace transmitter {
     T* mBuf = nullptr;
     int mSize = 0; // size of elements requested
     int mRealSize = 0; // the actually allocated size
-    int mGranularity = 1024;
+    int mGranularity = 1024 / sizeof(T); // the space actually allocated will be a multiple of this
 
 
   public:
+    HeapBuffer(int granularity = 0) {
+      if (granularity > 0) {
+        mGranularity = granularity;
+      }
+    }
 
     ~HeapBuffer() {
       delete mBuf;
