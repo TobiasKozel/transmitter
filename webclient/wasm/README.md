@@ -1,12 +1,9 @@
 ### Simple JS Bindings for libopus
 
-Very simplified version of https://github.com/abalabahaha/opusscript
+Very simplified version of https://github.com/abalabahaha/opusscript used to build opus and the other classes
 
-Compiled using emscripten
-
-Initialize the submoules
+Make sure the submodules are initialized
 
 Simply set up the emsdk environment and run `make`
 
-
-Put the files in build into the asset folder of angular
+Put the files in build into the asset folder of the webclient in ../src/assets
