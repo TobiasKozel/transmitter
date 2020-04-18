@@ -27,11 +27,10 @@
 
 #include "./HOheapbuf.h"
 
-// default to doubles for audio samples
 #ifdef WDL_RESAMPLE_TYPE
 typedef WDL_RESAMPLE_TYPE WDL_ResampleSample;
 #else
-typedef double WDL_ResampleSample;
+typedef float WDL_ResampleSample;
 #endif
 
 
@@ -386,7 +385,7 @@ public:
 
 private:
 
-  double m_sratein WDL_FIXALIGN;
+  double m_sratein;
   double m_srateout;
   double m_fracpos;
   double m_ratio;
