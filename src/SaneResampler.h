@@ -26,7 +26,9 @@ namespace transmitter {
     int ProcessBlock(sample** in, sample** out, int nFrames) {
       sample* buf[2];
       const int n = _resamplePrepare(buf, nFrames);
-      return _resample(in, out, buf, n);
+      memcpy(buf[0], in[0], n * sizeof(float));
+      memcpy(buf[1], in[1], n * sizeof(float));
+      return _resample(out, buf, n);
     }
 
     int _resamplePrepare(sample** buf, int nFrames) {
@@ -35,9 +37,7 @@ namespace transmitter {
       return nl;
     }
 
-    int _resample(sample** in, sample** out, sample** buf, int n) {
-      memcpy(buf[0], in[0], n * sizeof(float));
-      memcpy(buf[1], in[1], n * sizeof(float));
+    int _resample(sample** out, sample** buf, int n) {
       int out1 = mLs.ResampleOut(out[0], n, 512 * 4, 1);
       int out2 = mRs.ResampleOut(out[1], n, 512 * 4, 1);
       return out1;

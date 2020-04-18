@@ -174,6 +174,10 @@ export class MultiCodec {
         this.emMultiCodec.setBufferSize(size);
     }
 
+    public setSampleRate(sr: number) {
+        this.emMultiCodec.setSampleRate(sr);
+    }
+
     /**
      * Acts as a destructor
      */

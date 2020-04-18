@@ -3,7 +3,9 @@
 #include "./CodecOpus.h"
 #include "./CodecRAW.h"
 
+#ifdef __EMSCRIPTEN__
 #include "./SaneResampler.h"
+#endif
 
 namespace transmitter {
   /**
@@ -66,7 +68,8 @@ namespace transmitter {
 #ifdef __EMSCRIPTEN__
     void setSampleRate(int sampleRate) {
       if (sampleRate != 48000) {
-        mRsOut.setUp(48000, sampleRate);
+        printf("Set the sample rate for the decoder to enable resampling");
+        mRsOut.setUp(48000.0, sampleRate);
         mResamplerSetup = true;
       }
     }
@@ -99,10 +102,14 @@ namespace transmitter {
         // samples needed
         int need = mRsOut._resamplePrepare(buf, requestedSamples);
         // samples got from the decoder
-        int got = mActiveDecoder->popSamples(mRsOut.buffer, need);
+        int got = mActiveDecoder->popSamples(buf, need);
         if (got > 0) {
           // the actual sample count after resampling
-          out = mRsOut._resample(mRsOut.buffer, outputs, buf, need);
+          out = mRsOut._resample(outputs, buf, need);
+          printf("%i %i %i\n", out, need, got);
+          if (out != need) {
+            printf("\nMismatch %i %i\n", out, need);
+          }
         }
       } else
 #endif

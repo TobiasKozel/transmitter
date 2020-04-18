@@ -308,8 +308,6 @@ void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   const sample volRemote = DBToAmp(GetParam(kVolumeRemote)->Value());
   const sample bufferSize = GetParam(kBufferSize)->Value();
 
-
-
   if (mMSession != nullptr) {
     mMSession->setBufferSize(bufferSize);
     if (mResaplerSetup) {

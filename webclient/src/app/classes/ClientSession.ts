@@ -144,6 +144,7 @@ export class ClientSession {
      */
     public setUpAudioContext(ctx: AudioContext, buffersize: number): GainNode {
         this.cleanUpAudioContext();
+        this.codecInstance.setSampleRate(ctx.sampleRate);
         this.processor = ctx.createScriptProcessor(
             buffersize, 0, 2
         );
