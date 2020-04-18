@@ -15,6 +15,11 @@ class FloatBuffer {
     private sampleArrays: Float32Array[] = [];
 
     constructor(private length, private channels = 2) {
+        if (!(<any>window).WASMLock) {
+            console.error("Trying to contruct a WASM object on its own! Use the wasm loader service instead!");
+            debugger;
+            return;
+        }
         // will return a pointer, addressing bytes
         this.mainPtr = Module._malloc(channels * 4);
         // will turn it into a array index for 4 byte elements

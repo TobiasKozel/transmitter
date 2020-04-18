@@ -14,6 +14,11 @@ export class URLParser {
     public noPath: string = "";
 
     constructor(url: string) {
+        if (!(<any>window).WASMLock) {
+            console.error("Trying to contruct a WASM object on its own! Use the wasm loader service instead!");
+            debugger;
+            return;
+        }
         this.emURLObject = new Module.URLParser(url);
         this.protocol = this.emURLObject.protocol;
         this.host = this.emURLObject.host;

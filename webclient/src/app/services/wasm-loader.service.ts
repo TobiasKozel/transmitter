@@ -46,7 +46,10 @@ export class WasmLoaderService {
 
 	public constructURLParser(url: string, callback: (param: URLParser) => void) {
 		this.construct(() => {
-			callback(new URLParser(url));
+			(<any>window).WASMLock = true;
+			const obj = new URLParser(url);
+			(<any>window).WASMLock = false;
+			callback(obj);
 		});
 	}
 
@@ -56,7 +59,10 @@ export class WasmLoaderService {
 	 */
 	public contructCodec(callback: (param: MultiCodec) => void) {
 		this.construct(() => {
-			callback(new MultiCodec());
+			(<any>window).WASMLock = true;
+			const obj = new MultiCodec();
+			(<any>window).WASMLock = false;
+			callback(obj);
 		});
 	}
 
