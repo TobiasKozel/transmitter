@@ -376,7 +376,6 @@
     <ClCompile Include="..\..\..\IPlug\IPlugProcessor.cpp" />
     <ClCompile Include="..\..\..\IPlug\IPlugTimer.cpp" />
     <ClCompile Include="..\..\..\IPlug\VST2\IPlugVST2.cpp" />
-    <ClCompile Include="..\..\..\WDL\resample.cpp" />
     <ClCompile Include="..\thirdparty\netlib\src\netlib.c" />
     <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c" />
     <ClCompile Include="..\thirdparty\netlib\src\netlib_tcp.c" />
