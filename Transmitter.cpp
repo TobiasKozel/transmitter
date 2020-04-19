@@ -21,7 +21,7 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
   GetParam(kBitRate)->InitDouble("Bitrate", 128, 1, 512, 0.1, "kBit/s");
   GetParam(kComplexity)->InitDouble("OPUS Complexity", 10, 0, 10, 1);
   GetParam(kPacketLoss)->InitPercentage("OPUS Expected packet loss");
-  GetParam(kBufferSize)->InitDouble("Receive Buffer Size", 960, 16, 10000, 1);
+  GetParam(kBufferSize)->InitDouble("Receive Buffer Size", 960 * 2, 16, 10000, 1);
   GetParam(kFrameSize)->InitEnum(
     "OPUS Frame Size", 1, 4, "Samples", iplug::IParam::kFlagsNone,
     "", "120", "240", "480", "960", "1920", "2880"
@@ -114,7 +114,7 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
           return;
         }
         GetUI()->SetTextInClipboard(button->GetLabelString());
-        GetUI()->OpenURL(button->GetLabelString());
+        // GetUI()->OpenURL(button->GetLabelString());
         GetUI()->ReleaseMouseCapture();
       },
       mMSession ? mMSession->getOwnAddress() : STR_OWNID_HINT
@@ -278,6 +278,11 @@ void Transmitter::connect(bool keepId) {
 
 #if IPLUG_DSP
 void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
+  ////if (mResaplerSetup) {
+  ////  int rsSamples2 = mRsIn.ProcessBlock(inputs, mRsIn.buffer, nFrames);
+  ////  int rsSamples = mRsOut.ProcessBlock(mRsIn.buffer, outputs, nFrames);
+  ////}
+  ////return;
   /**
    * Process the block in smaller bits since it's too large
    * Also abused to lower the delay a feedback node creates
@@ -308,6 +313,12 @@ void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   const sample volRemote = DBToAmp(GetParam(kVolumeRemote)->Value());
   const sample bufferSize = GetParam(kBufferSize)->Value();
 
+  for (int i = 0; i < nFrames; i++) {
+    for (int c = 0; c < nChans; c++) {
+      outputs[c][i] = 0;
+    }
+  }
+
   if (mMSession != nullptr) {
     mMSession->setBufferSize(bufferSize);
     if (mResaplerSetup) {
@@ -316,12 +327,6 @@ void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
       int rsSamples = mRsOut.ProcessBlock(mRsOut.buffer, outputs, rsSamples2);
     } else {
       mMSession->ProcessBlock(inputs, outputs, nFrames);
-    }
-  } else {
-    for (int i = 0; i < nFrames; i++) {
-      for (int c = 0; c < nChans; c++) {
-        outputs[c][i] = 0;
-      }
     }
   }
 

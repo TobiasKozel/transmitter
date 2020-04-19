@@ -69,7 +69,7 @@ namespace transmitter {
     void setSampleRate(int sampleRate) {
       if (sampleRate != 48000) {
         printf("Set the sample rate for the decoder to enable resampling");
-        mRsOut.setUp(48000.0, sampleRate);
+        mRsOut.setUp(48000.0, sampleRate, false);
         mResamplerSetup = true;
       }
     }

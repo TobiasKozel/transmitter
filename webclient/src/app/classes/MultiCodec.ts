@@ -180,18 +180,18 @@ export class MultiCodec {
     }
 
     public setSampleRate(sr: number) {
-        this.emMultiCodec.setSampleRate(sr);
+        // this.emMultiCodec.setSampleRate(sr);
     }
 
     /**
      * Acts as a destructor
      */
     public destroy() {
-        this.emMultiCodec.delete();
         this.bufferDecode.destroy();
         this.bufferEncode.destroy();
         this.packetDecode.destroy();
         this.packetEncode.destroy();
+        this.emMultiCodec.delete();
 
         if (!environment.production) {
             for (let i in (<any>window).DEBUGcodecs) {

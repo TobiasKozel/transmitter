@@ -6,6 +6,7 @@ Transmitter consists out of 3 components
 ## VST/AU Plugin
 
 ![screenshot](https://i.imgur.com/XKIu753.png)
+
 It's a plugin which allows you to stream and receive Audio, similar to Reastream.
 In Master-Server mode it'll display a URL as soon as it's connected.
 Anyone with it can listen to the audio which passes through it.
@@ -16,6 +17,7 @@ The latency depends on the codec and its settings as well as on the network itse
 ## Webclient
 
 ![screenshot](https://i.imgur.com/lq9TgrU.png)
+
 The webclient is able to play back streams from the plugin. This isn't as low latency as the plugin but fairly convenient.
 More info in the webclient directory. 
 

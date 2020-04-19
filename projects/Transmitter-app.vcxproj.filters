@@ -104,9 +104,6 @@
     <ClCompile Include="..\thirdparty\netlib\src\netlib_select.c">
       <Filter>thirdparty\netlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\WDL\resample.cpp">
-      <Filter>thirdparty</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Transmitter.h" />

@@ -178,6 +178,7 @@ export class ClientSession {
 	}
 
 	public destroy() {
+        this.valid = false;
         clearTimeout(this.updateIntervalTimer);
         this.cleanUpAudioContext();
         this.closeSocket();
