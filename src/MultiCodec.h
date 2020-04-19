@@ -75,7 +75,7 @@ namespace transmitter {
     }
 #endif
 
-    int encode(float** input, int nFrames, unsigned char* output) const {
+    int encode(const float** input, int nFrames, unsigned char* output) const {
       if (mActiveEncoder == nullptr) { return 0; }
       return mActiveEncoder->encode(input, nFrames, output);
     }
@@ -93,28 +93,29 @@ namespace transmitter {
     }
 
     int popSamples(float** outputs, int requestedSamples) {
-      if (mActiveDecoder == nullptr) { return 0; }
       int out = 0;
 
+      if (mActiveDecoder != nullptr) {
 #ifdef __EMSCRIPTEN__
-      if (mResamplerSetup) {
-        sample* buf[2];
-        // samples needed
-        int need = mRsOut._resamplePrepare(buf, requestedSamples);
-        // samples got from the decoder
-        int got = mActiveDecoder->popSamples(buf, need);
-        if (got > 0) {
-          // the actual sample count after resampling
-          out = mRsOut._resample(outputs, buf, need);
-          printf("%i %i %i\n", out, need, got);
-          if (out != need) {
-            printf("\nMismatch %i %i\n", out, need);
+        if (mResamplerSetup) {
+          sample* buf[2];
+          // samples needed
+          int need = mRsOut._resamplePrepare(buf, requestedSamples);
+          // samples got from the decoder
+          int got = mActiveDecoder->popSamples(buf, need);
+          if (got > 0) {
+            // the actual sample count after resampling
+            out = mRsOut._resample(outputs, buf, need);
+            printf("%i %i %i\n", out, need, got);
+            if (out != need) {
+              printf("\nMismatch %i %i\n", out, need);
+            }
           }
-        }
-      } else
+        } else
 #endif
-      {
-        out = mActiveDecoder->popSamples(outputs, requestedSamples);
+        {
+          out = mActiveDecoder->popSamples(outputs, requestedSamples);
+        }
       }
 
       for (int i = out; i < requestedSamples; i++) {

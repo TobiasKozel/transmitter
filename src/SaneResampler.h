@@ -29,7 +29,7 @@ namespace transmitter {
       _setUp(mLs, srIn, srOut, inputDriven);
     }
 
-    int ProcessBlock(sample** in, sample** out, int nFrames) {
+    int ProcessBlock(const sample** in, sample** out, int nFrames) {
       sample* buf[2];
       const int n = _resamplePrepare(buf, nFrames);
       memcpy(buf[0], in[0], n * sizeof(float));

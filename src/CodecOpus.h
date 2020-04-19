@@ -49,7 +49,7 @@ namespace transmitter {
     }
 
   private:
-    int encodeImpl(float** samples, int count, unsigned char* result) override {
+    int encodeImpl(const float** samples, int count, unsigned char* result) override {
       mBuffer[0].add(samples[0], count);
       mBuffer[1].add(samples[1], count);
       if (mFrameSize <= mBuffer[0].inBuffer()) {

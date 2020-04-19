@@ -318,15 +318,15 @@ void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
       outputs[c][i] = 0;
     }
   }
-
   if (mMSession != nullptr) {
     mMSession->setBufferSize(bufferSize);
     if (mResaplerSetup) {
-      int rsSamples2 = mRsIn.ProcessBlock(inputs, mRsIn.buffer, nFrames);
-      mMSession->ProcessBlock(mRsIn.buffer, mRsOut.buffer, rsSamples2);
-      int rsSamples = mRsOut.ProcessBlock(mRsOut.buffer, outputs, rsSamples2);
+      int rsSamples2 = 0;
+      rsSamples2 = mRsIn.ProcessBlock(const_cast<const sample**>(inputs), mRsIn.buffer, nFrames);
+      mMSession->ProcessBlock(const_cast<const sample**>(mRsIn.buffer), mRsOut.buffer, rsSamples2);
+      int rsSamples = mRsOut.ProcessBlock(const_cast<const sample**>(mRsOut.buffer), outputs, rsSamples2);
     } else {
-      mMSession->ProcessBlock(inputs, outputs, nFrames);
+      mMSession->ProcessBlock(const_cast<const sample**>(inputs), outputs, nFrames);
     }
   }
 

@@ -18,7 +18,7 @@ namespace transmitter {
     /**
      * Actual implementation of the encoder
      */
-    virtual int encodeImpl(float** samples, int count, unsigned char* result) = 0;
+    virtual int encodeImpl(const float** samples, int count, unsigned char* result) = 0;
 
   public:
     EncoderBase() {
@@ -31,7 +31,7 @@ namespace transmitter {
      * Will push samples to the buffer and encode them
      * if the frame size is reached
      */
-    int encode(float** samples, int count, unsigned char* result) {
+    int encode(const float** samples, int count, unsigned char* result) {
       const int size = encodeImpl(samples, count, result + 4); // Keep space for the name
       if (size == 0) { return 0; }
       memcpy(result, mName, 4); // Add the codec name

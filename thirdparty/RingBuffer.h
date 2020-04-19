@@ -85,7 +85,7 @@ namespace transmitter {
     /**
      * Adds a number of elements
      */
-    int add(T* in, int elements) {
+    int add(const T* in, int elements) {
       const int spaceLeftHead = mSize - mHead; // Space left before exceeding upper buffer bounds
       if (elements > spaceLeftHead) {
         /**

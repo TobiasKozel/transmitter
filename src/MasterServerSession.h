@@ -143,7 +143,7 @@ namespace transmitter {
       
     }
 
-    void ProcessBlock(sample** inputs, sample** outputs, int nFrames) const {
+    void ProcessBlock(const sample** inputs, sample** outputs, int nFrames) const {
       if (mCommunicator != nullptr) {
         mCommunicator->ProcessBlock(inputs, outputs, nFrames);
       }

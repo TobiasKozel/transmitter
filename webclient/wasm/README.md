@@ -4,6 +4,4 @@ Very simplified version of https://github.com/abalabahaha/opusscript used to bui
 
 Make sure the submodules are initialized
 
-Simply set up the emsdk environment and run `make`
-
-Put the files in build into the asset folder of the webclient in ../src/assets
+Simply set up the emsdk environment and run `make`. Do yourself a favor and do this on linux or maybe OS X since I haven't tested this on windows.

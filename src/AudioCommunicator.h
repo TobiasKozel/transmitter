@@ -45,7 +45,7 @@ namespace transmitter {
       netlib_free_packet(mPacket);
     }
 
-    void ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
+    void ProcessBlock(const sample** inputs, sample** outputs, int nFrames) {
       /**
        * Encode the input
        */

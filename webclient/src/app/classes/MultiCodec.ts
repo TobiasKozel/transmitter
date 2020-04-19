@@ -180,7 +180,7 @@ export class MultiCodec {
     }
 
     public setSampleRate(sr: number) {
-        // this.emMultiCodec.setSampleRate(sr);
+        this.emMultiCodec.setSampleRate(sr);
     }
 
     /**
