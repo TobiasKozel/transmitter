@@ -14,13 +14,17 @@ namespace transmitter {
 
   public:
     HeapBuffer(int granularity = 0) {
-      if (granularity > 0) {
-        mGranularity = granularity;
-      }
+      setGranularity(granularity);
     }
 
     ~HeapBuffer() {
       delete mBuf;
+    }
+
+    void setGranularity(int granularity) {
+      if (granularity > 0) {
+        mGranularity = granularity;
+      }
     }
 
     T* get() {
@@ -55,6 +59,47 @@ namespace transmitter {
 
     int size() const {
       return mSize;
+    }
+  };
+
+  template <typename T, int channels>
+  class MultiHeapBuffer {
+    HeapBuffer<T> mBuffers[channels];
+    T* mBufferRef[channels] = { nullptr };
+  public:
+    MultiHeapBuffer(int granularity = 0) {
+      setGranularity(granularity);
+    }
+
+    ~MultiHeapBuffer() {
+      for (int c = 0; c < channels; c++) {
+        mBufferRef[c] = nullptr;
+      }
+    }
+
+    void setGranularity(int granularity = 0) {
+      for (int c = 0; c < channels; c++) {
+        mBuffers[c].setGranularity(granularity);
+      }
+    }
+
+    T** get(size_t offset = 0) {
+      for (int c = 0; c < channels; c++) {
+        mBufferRef[c] = mBuffers[c].get() + offset;
+      }
+      return mBufferRef;
+    }
+
+    T* getChannel(int c) {
+      return mBuffers[c].get();
+    }
+
+    T** resize(const int size, const bool downsize = true) {
+      for (int c = 0; c < channels; c++) {
+        mBuffers[c].resize(size, downsize);
+        mBufferRef[c] = mBuffers[c].get();
+      }
+      return mBufferRef;
     }
   };
 }

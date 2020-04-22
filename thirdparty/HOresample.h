@@ -22,6 +22,12 @@
 
 */
 
+/**
+ * Threw out the sinc resampler since I couldn't get it to work
+ * replaced the heapbuffer
+ * put it all in the header
+ */
+
 #pragma once
 
 #include "./HOheapbuf.h"
@@ -37,7 +43,6 @@ public:
   ~WDL_Resampler() {
     delete m_iirfilter;
   }
-  // if sinc set, it overrides interp or filtercnt
   void SetMode(int filtercnt) {
     m_filtercnt = std::max(0, std::min(filtercnt, 4));
 
@@ -47,7 +52,7 @@ public:
     }
   }
 
-  // used for filtercnt>0 but not sinc
+  // used for filtercnt>0
   void SetFilterParms(float filterpos = 0.693, float filterq = 0.707) {
     m_filterpos = filterpos;
     m_filterq = filterq;
