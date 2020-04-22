@@ -4,7 +4,7 @@
 #include "./CodecRAW.h"
 
 #ifdef __EMSCRIPTEN__
-#include "./SaneResampler.h"
+#include "../thirdparty/SpeexResampler.h"
 #endif
 
 namespace transmitter {

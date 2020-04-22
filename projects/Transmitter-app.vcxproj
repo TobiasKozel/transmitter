@@ -333,16 +333,16 @@
     <ClInclude Include="..\src\CodecOpus.h" />
     <ClInclude Include="..\src\MasterServerSession.h" />
     <ClInclude Include="..\src\MultiCodec.h" />
-    <ClInclude Include="..\src\SaneResampler.h" />
     <ClInclude Include="..\src\TConfig.h" />
     <ClInclude Include="..\src\TextControl.h" />
+    <ClInclude Include="..\src\TResampler.h" />
     <ClInclude Include="..\src\Types.h" />
     <ClInclude Include="..\src\URLParser.h" />
-    <ClInclude Include="..\thirdparty\HOresample.h" />
     <ClInclude Include="..\thirdparty\netlib\src\netlib.h" />
     <ClInclude Include="..\thirdparty\netlib\src\platform.h" />
     <ClInclude Include="..\thirdparty\netlib\src\util.h" />
     <ClInclude Include="..\thirdparty\RingBuffer.h" />
+    <ClInclude Include="..\thirdparty\SpeexResampler.h" />
     <ClInclude Include="..\Transmitter.h" />
     <ClInclude Include="..\resources\resource.h" />
   </ItemGroup>

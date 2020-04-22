@@ -1,10 +1,45 @@
+/* Copyright (C) 2007-2008 Jean-Marc Valin
+   Copyright (C) 2008      Thorvald Natvig
+
+   File: resample.c
+   Arbitrary resampling code
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are
+   met:
+
+   1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+   3. The name of the author may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+   IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+   DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+   (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   POSSIBILITY OF SUCH DAMAGE.
+
+   NOTE: The resampler was packed into a class and the integer mode removed
+         as well as the function pointer system to call the correct resampling
+         function. Original sourcefiles are arch.h, resample.c and speex_resampler.h
+         from the speexdsp library.
+         https://github.com/xiph/speexdsp
+*/
+
 #pragma once
 
 #include <cmath>
-
-#ifndef UINT32_MAX
-  #define UINT32_MAX 4294967295U
-#endif
 
 namespace transmitter {
   enum {
@@ -16,6 +51,15 @@ namespace transmitter {
     RESAMPLER_ERR_OVERFLOW = 5,
 
     RESAMPLER_ERR_MAX_ERROR
+  };
+
+  enum RESAMPLER_FUN {
+    NONE,
+    ZERO,
+    DIRECT_SINGLE,
+    DIRECT_DOUBLE,
+    INTERP_DOUBLE,
+    INTERP_SINGLE,
   };
 
   typedef float spx_mem_t;
@@ -33,27 +77,34 @@ namespace transmitter {
   static void* speex_realloc(void* ptr, int size) { return realloc(ptr, size); }
   static void speex_free(void* ptr) { free(ptr); }
 
-  constexpr spx_word32_t MULT16_16(spx_word32_t a, spx_word32_t b) {
-    return a * b;
-  }
+  /**
+   * constexpr buther performance in debug mode for some reason
+   * maybe the casts are wrong
+   */
+  #define MULT16_16(a,b)     ((spx_word32_t)(a)*(spx_word32_t)(b))
+  //constexpr spx_word32_t MULT16_16(spx_word32_t a, spx_word32_t b) {
+  //  return a * b;
+  //}
 
-  constexpr spx_word32_t SATURATE32PSHR(spx_word32_t x, spx_word32_t, spx_word32_t) {
-    return x;
-  }
+  #define SATURATE32PSHR(x,shift,a) (x)
+  //constexpr spx_word32_t SATURATE32PSHR(spx_word32_t x, spx_word32_t, spx_word32_t) {
+  //  return x;
+  //}
 
-  constexpr double PSHR32(double a, double shift) {
-    return a;
-  }
+  #define PSHR32(a,shift) (a)
+  //constexpr double PSHR32(double a, double shift) {
+  //  return a;
+  //}
 
-  constexpr spx_word16_t MULT16_32_Q15(spx_word16_t a, spx_word16_t b) {
-    return a * b;
-  }
+  #define MULT16_32_Q15(a,b)     ((a)*(b))
+  //constexpr spx_word16_t MULT16_32_Q15(spx_word16_t a, spx_word16_t b) {
+  //  return a * b;
+  //}
 
-  constexpr spx_word32_t SHR32(spx_word32_t a, spx_word32_t) {
-    return a;
-  }
-
-#define MULT16_32_Q15(a,b)     ((a)*(b))
+  #define SHR32(a,shift) (a)
+  //constexpr spx_word32_t SHR32(spx_word32_t a, spx_word32_t) {
+  //  return a;
+  //}
 
   static const double M_PI = 3.14159265358979323846;
 
@@ -182,8 +233,8 @@ namespace transmitter {
     spx_uint32_t major = value / den;
     spx_uint32_t remain = value % den;
     /* TODO: Could use 64 bits operation to check for overflow. But only guaranteed in C99+ */
-    if (remain > UINT32_MAX / num || major > UINT32_MAX / num
-      || major * num > UINT32_MAX - remain * num / den)
+    if (remain > 4294967295U / num || major > 4294967295U / num
+      || major * num > 4294967295U - remain * num / den)
       return RESAMPLER_ERR_OVERFLOW;
     *result = remain * num / den + major * num;
     return RESAMPLER_ERR_SUCCESS;
@@ -219,7 +270,9 @@ namespace transmitter {
   }
 
   class SpeexResampler {
-    typedef int (SpeexResampler::*resampler_basic_func)(spx_uint32_t, const spx_word16_t*, spx_uint32_t*, spx_word16_t*, spx_uint32_t*);
+    RESAMPLER_FUN active_resampler = NONE;
+    // typedef int (SpeexResampler::*resampler_basic_func)(spx_uint32_t, const spx_word16_t*, spx_uint32_t*, spx_word16_t*, spx_uint32_t*);
+    // int (SpeexResampler::* resampler_ptr)(spx_uint32_t, const spx_word16_t*, spx_uint32_t*, spx_word16_t*, spx_uint32_t*) = nullptr;
     spx_uint32_t in_rate;
     spx_uint32_t out_rate;
     spx_uint32_t num_rate;
@@ -245,7 +298,6 @@ namespace transmitter {
     spx_word16_t* mem = nullptr;
     spx_word16_t* sinc_table = nullptr;
     spx_uint32_t sinc_table_length;
-    int (SpeexResampler::* resampler_ptr)(spx_uint32_t, const spx_word16_t*, spx_uint32_t*, spx_word16_t*, spx_uint32_t*) = nullptr;
     int    in_stride;
     int    out_stride;
 
@@ -560,10 +612,12 @@ namespace transmitter {
             st->sinc_table[i * st->filt_len + j] = sinc(st->cutoff, ((j - (spx_int32_t)st->filt_len / 2 + 1) - ((float)i) / st->den_rate), st->filt_len, quality_map[st->quality].window_func);
           }
         }
-        if (st->quality > 8)
-          st->resampler_ptr = &SpeexResampler::resampler_basic_direct_double;
-        else
-          st->resampler_ptr = &SpeexResampler::resampler_basic_direct_single;
+        if (st->quality > 8) {
+          active_resampler = DIRECT_DOUBLE;
+          
+        } else {
+          active_resampler = DIRECT_SINGLE;
+        }
         /*fprintf (stderr, "resampler uses direct sinc table and normalised cutoff %f\n", cutoff);*/
       }
       else {
@@ -571,10 +625,11 @@ namespace transmitter {
         for (i = -4; i < (spx_int32_t)(st->oversample * st->filt_len + 4); i++)
           st->sinc_table[i + 4] = sinc(st->cutoff, (i / (float)st->oversample - st->filt_len / 2), st->filt_len, quality_map[st->quality].window_func);
 
-        if (st->quality > 8)
-          st->resampler_ptr = &SpeexResampler::resampler_basic_interpolate_double;
-        else
-          st->resampler_ptr = &SpeexResampler::resampler_basic_interpolate_single;
+        if (st->quality > 8) {
+          active_resampler = INTERP_DOUBLE;
+        } else {
+          active_resampler = INTERP_SINGLE;
+        }
       }
 
       /* Here's the place where we update the filter memory to take into account
@@ -663,7 +718,7 @@ namespace transmitter {
       return RESAMPLER_ERR_SUCCESS;
 
     fail:
-      st->resampler_ptr = &SpeexResampler::resampler_basic_zero;
+      active_resampler = ZERO;
       /* st->mem may still contain consumed input samples for the filter.
          Restore filt_len so that filt_len - 1 still points to the position after
          the last of these samples. */
@@ -681,8 +736,23 @@ namespace transmitter {
 
       st->started = 1;
 
-      /* Call the right resampler through the function ptr */
-      out_sample = (this->*resampler_ptr)(channel_index, mem, in_len, out, out_len);
+      /* Call the right resampler */
+      switch (active_resampler) {
+      case DIRECT_SINGLE:
+        out_sample = resampler_basic_direct_single(channel_index, mem, in_len, out, out_len);
+        break;
+      case DIRECT_DOUBLE:
+        out_sample = resampler_basic_direct_double(channel_index, mem, in_len, out, out_len);
+        break;
+      case INTERP_SINGLE:
+        out_sample = resampler_basic_interpolate_single(channel_index, mem, in_len, out, out_len);
+        break;
+      case INTERP_DOUBLE:
+        out_sample = resampler_basic_interpolate_double(channel_index, mem, in_len, out, out_len);
+        break;
+      default:
+        out_sample = resampler_basic_zero(channel_index, mem, in_len, out, out_len);
+      }
 
       if (st->last_sample[channel_index] < (spx_int32_t)*in_len)
         *in_len = st->last_sample[channel_index];
@@ -732,7 +802,6 @@ namespace transmitter {
       st->mem_alloc_size = 0;
       st->filt_len = 0;
       st->mem = nullptr;
-      st->resampler_ptr = nullptr;
 
       st->cutoff = 1.f;
       st->in_stride = 1;
@@ -809,7 +878,7 @@ namespace transmitter {
       }
       *in_len -= ilen;
       *out_len -= olen;
-      return st->resampler_ptr == &SpeexResampler::resampler_basic_zero ? RESAMPLER_ERR_ALLOC_FAILED : RESAMPLER_ERR_SUCCESS;
+      return active_resampler == ZERO ? RESAMPLER_ERR_ALLOC_FAILED : RESAMPLER_ERR_SUCCESS;
     }
 
     int speex_resampler_set_rate(spx_uint32_t in_rate, spx_uint32_t out_rate) {

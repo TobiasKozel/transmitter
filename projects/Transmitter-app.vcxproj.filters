@@ -345,16 +345,16 @@
     <ClInclude Include="..\src\CodecRAW.h">
       <Filter>src\codec</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SaneResampler.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\DirectConnection.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\thirdparty\HOresample.h">
+    <ClInclude Include="..\thirdparty\RingBuffer.h">
       <Filter>thirdparty</Filter>
     </ClInclude>
-    <ClInclude Include="..\thirdparty\RingBuffer.h">
+    <ClInclude Include="..\src\TResampler.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\thirdparty\SpeexResampler.h">
       <Filter>thirdparty</Filter>
     </ClInclude>
   </ItemGroup>

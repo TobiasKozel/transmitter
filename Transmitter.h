@@ -15,8 +15,8 @@
 #include "./src/TextControl.h"
 #include "./src/TConfig.h"
 #include "./src/MasterServerSession.h"
-#include "./src/SaneResampler.h"
 #include "./src/Types.h"
+#include "thirdparty/SpeexResampler.h"
 
 
 const int kNumPrograms = 1;
@@ -35,9 +35,9 @@ enum EParams {
 };
 
 class Transmitter final : public iplug::Plugin {
-  transmitter::SaneResampler mRsIn;
-  transmitter::SaneResampler mRsOut;
-  bool mResaplerSetup = false;
+  transmitter::SpeexResampler mUp;
+  transmitter::SpeexResampler mDown;
+  bool mResamplingSetup = false;
   transmitter::MasterServerSession* mMSession = nullptr;
   WDL_PtrList<iplug::igraphics::IControl> mMainTab, mDirectTab;
   iplug::igraphics::IVButtonControl* mMainTabButton = nullptr, * mDirectTabButton = nullptr;
@@ -53,9 +53,11 @@ class Transmitter final : public iplug::Plugin {
   transmitter::sample* mSliceBufferSubIn[2];
   transmitter::sample* mSliceBufferSubOut[2];
   transmitter::sample** mSliceBuffer[2] = { mSliceBufferSubIn, mSliceBufferSubOut };
+  transmitter::sample** mResamplingBuffer = nullptr;
 
   void switchTab(bool directTab);
   void connect(bool keepId);
+  void setupResampling();
 public:
   Transmitter(const iplug::InstanceInfo& info);
   ~Transmitter();

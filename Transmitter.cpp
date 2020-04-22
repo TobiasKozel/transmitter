@@ -1,12 +1,12 @@
 #include "Transmitter.h"
 
-using namespace iplug;
-#include "IPlug_include_in_plug_src.h"
-#include "IControls.h"
 #include "./thirdparty/json.hpp"
 #include "./src/GUIStyle.h"
 #include "../thirdparty/netlib/src/netlib.h"
 
+using namespace iplug;
+#include "IControls.h"
+#include "IPlug_include_in_plug_src.h"
 using namespace transmitter;
 Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, iplug::MakeConfig(kNumParams, kNumPrograms)) {
   if (netlib_init() == -1) {
@@ -210,6 +210,12 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
 
 Transmitter::~Transmitter() {
   netlib_quit();
+  if (mResamplingSetup) {
+    for (int c = 0; c < mChannelCount; c++) {
+      delete[] mResamplingBuffer[c];
+    }
+    delete[] mResamplingBuffer;
+  }
 }
 
 void Transmitter::switchTab(bool directTab) {
@@ -254,12 +260,7 @@ void Transmitter::OnUIClose() {
 }
 
 void Transmitter::connect(bool keepId) {
-  const double sr = GetSampleRate();
-  if (sr != 48000.0 && !mResaplerSetup) {
-    mRsIn.setUp(GetSampleRate(), 48000.0);
-    mRsOut.setUp(48000.0, GetSampleRate());
-    mResaplerSetup = true;
-  }
+  setupResampling();
 
   std::string id;
   if (mMSession != nullptr) {
@@ -276,13 +277,41 @@ void Transmitter::connect(bool keepId) {
   }
 }
 
+void Transmitter::setupResampling() {
+  const double sr = GetSampleRate();
+  if (sr != 48000.0 && !mResamplingSetup) {
+    mResamplingBuffer = new sample * [mChannelCount];
+    for (int c = 0; c < mChannelCount; c++) {
+      mResamplingBuffer[c] = new sample[MAX_BUFFER_SIZE * 4];
+    }
+    int err;
+    mUp.init(mChannelCount, sr, 48000, 5, &err);
+    mDown.init(mChannelCount, 48000, sr, 5, &err);
+    mResamplingSetup = true;
+  }
+}
+
 #if IPLUG_DSP
 void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
-  ////if (mResaplerSetup) {
-  ////  int rsSamples2 = mRsIn.ProcessBlock(inputs, mRsIn.buffer, nFrames);
-  ////  int rsSamples = mRsOut.ProcessBlock(mRsIn.buffer, outputs, nFrames);
-  ////}
-  ////return;
+  if (!mResamplingSetup) {
+    setupResampling();
+  }
+  unsigned o = 0;
+  for (int c = 0; c < mChannelCount; c++) {
+    unsigned int inl = nFrames;
+    unsigned int outl = 4096;
+    mUp.speex_resampler_process_float(c, inputs[c], &inl, mResamplingBuffer[c], &outl);
+    int a = 0;
+    o = outl;
+  }
+
+  for (int c = 0; c < 2; c++) {
+    unsigned int inl = o;
+    unsigned int outl = nFrames;
+    mDown.speex_resampler_process_float(c, mResamplingBuffer[c], &inl, outputs[c], &outl);
+    int a = 0;
+  }
+  return;
   /**
    * Process the block in smaller bits since it's too large
    * Also abused to lower the delay a feedback node creates
@@ -320,11 +349,9 @@ void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   }
   if (mMSession != nullptr) {
     mMSession->setBufferSize(bufferSize);
-    if (mResaplerSetup) {
-      int rsSamples2 = 0;
-      rsSamples2 = mRsIn.ProcessBlock(const_cast<const sample**>(inputs), mRsIn.buffer, nFrames);
-      mMSession->ProcessBlock(const_cast<const sample**>(mRsIn.buffer), mRsOut.buffer, rsSamples2);
-      int rsSamples = mRsOut.ProcessBlock(const_cast<const sample**>(mRsOut.buffer), outputs, rsSamples2);
+    if (mResamplingSetup) {
+
+      // mMSession->ProcessBlock(const_cast<const sample**>(mRsIn.buffer), mRsOut.buffer, rsSamples2);
     } else {
       mMSession->ProcessBlock(const_cast<const sample**>(inputs), outputs, nFrames);
     }
