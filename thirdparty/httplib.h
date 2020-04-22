@@ -156,6 +156,7 @@ using socket_t = int;
 #include <openssl/x509v3.h>
 
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 // #if OPENSSL_VERSION_NUMBER < 0x1010100fL
@@ -311,7 +312,7 @@ struct Response {
   void set_header(const char *key, const char *val);
   void set_header(const char *key, const std::string &val);
 
-  void set_redirect(const char *url);
+  void set_redirect(const char *url, int status = 302);
   void set_content(const char *s, size_t n, const char *content_type);
   void set_content(std::string s, const char *content_type);
 
@@ -461,6 +462,7 @@ public:
   Server &Patch(const char *pattern, Handler handler);
   Server &Patch(const char *pattern, HandlerWithContentReader handler);
   Server &Delete(const char *pattern, Handler handler);
+  Server &Delete(const char *pattern, HandlerWithContentReader handler);
   Server &Options(const char *pattern, Handler handler);
 
   [[deprecated]] bool set_base_dir(const char *dir,
@@ -511,7 +513,7 @@ private:
   int bind_internal(const char *host, int port, int socket_flags);
   bool listen_internal();
 
-  bool routing(Request &req, Response &res, Stream &strm, bool last_connection);
+  bool routing(Request &req, Response &res, Stream &strm);
   bool handle_file_request(Request &req, Response &res, bool head = false);
   bool dispatch_request(Request &req, Response &res, Handlers &handlers);
   bool dispatch_request_for_content_reader(Request &req, Response &res,
@@ -524,14 +526,14 @@ private:
   bool write_content_with_provider(Stream &strm, const Request &req,
                                    Response &res, const std::string &boundary,
                                    const std::string &content_type);
-  bool read_content(Stream &strm, bool last_connection, Request &req,
-                    Response &res);
-  bool read_content_with_content_receiver(
-      Stream &strm, bool last_connection, Request &req, Response &res,
-      ContentReceiver receiver, MultipartContentHeader multipart_header,
-      ContentReceiver multipart_receiver);
-  bool read_content_core(Stream &strm, bool last_connection, Request &req,
-                         Response &res, ContentReceiver receiver,
+  bool read_content(Stream &strm, Request &req, Response &res);
+  bool
+  read_content_with_content_receiver(Stream &strm, Request &req, Response &res,
+                                     ContentReceiver receiver,
+                                     MultipartContentHeader multipart_header,
+                                     ContentReceiver multipart_receiver);
+  bool read_content_core(Stream &strm, Request &req, Response &res,
+                         ContentReceiver receiver,
                          MultipartContentHeader mulitpart_header,
                          ContentReceiver multipart_receiver);
 
@@ -550,6 +552,7 @@ private:
   Handlers patch_handlers_;
   HandlersForContentReader patch_handlers_for_content_reader_;
   Handlers delete_handlers_;
+  HandlersForContentReader delete_handlers_for_content_reader_;
   Handlers options_handlers_;
   Handler error_handler_;
   Logger logger_;
@@ -845,6 +848,9 @@ public:
             const char *client_ca_cert_file_path = nullptr,
             const char *client_ca_cert_dir_path = nullptr);
 
+  SSLServer(X509 *cert, EVP_PKEY *private_key,
+            X509_STORE *client_ca_cert_store = nullptr);
+
   ~SSLServer() override;
 
   bool is_valid() const override;
@@ -859,8 +865,11 @@ private:
 class SSLClient : public Client {
 public:
   explicit SSLClient(const std::string &host, int port = 443,
-            const std::string &client_cert_path = std::string(),
-            const std::string &client_key_path = std::string());
+                     const std::string &client_cert_path = std::string(),
+                     const std::string &client_key_path = std::string());
+
+  SSLClient(const std::string &host, int port, X509 *client_cert,
+            EVP_PKEY *client_key);
 
   ~SSLClient() override;
 
@@ -869,11 +878,13 @@ public:
   void set_ca_cert_path(const char *ca_ceert_file_path,
                         const char *ca_cert_dir_path = nullptr);
 
+  void set_ca_cert_store(X509_STORE *ca_cert_store);
+
   void enable_server_certificate_verification(bool enabled);
 
   long get_openssl_verify_result() const;
 
-  SSL_CTX *ssl_context() const noexcept;
+  SSL_CTX *ssl_context() const;
 
 private:
   bool process_and_close_socket(
@@ -894,6 +905,7 @@ private:
 
   std::string ca_cert_file_path_;
   std::string ca_cert_dir_path_;
+  X509_STORE *ca_cert_store_ = nullptr;
   bool server_certificate_verification_ = false;
   long verify_result_ = 0;
 };
@@ -2045,6 +2057,12 @@ inline bool redirect(T &cli, const Request &req, Response &res,
   new_req.path = path;
   new_req.redirect_count -= 1;
 
+  if (res.status == 303 && (req.method != "GET" && req.method != "HEAD")) {
+    new_req.method = "GET";
+    new_req.body.clear();
+    new_req.headers.clear();
+  }
+
   Response new_res;
 
   auto ret = cli.send(new_req, new_res);
@@ -2514,10 +2532,19 @@ get_range_offset_and_length(const Request &req, const Response &res,
 
 inline bool expect_content(const Request &req) {
   if (req.method == "POST" || req.method == "PUT" || req.method == "PATCH" ||
-      req.method == "PRI") {
+      req.method == "PRI" || req.method == "DELETE") {
     return true;
   }
   // TODO: check if Content-Length is set
+  return false;
+}
+
+inline bool has_crlf(const char *s) {
+  auto p = s;
+  while (*p) {
+    if (*p == '\r' || *p == '\n') { return true; }
+    p++;
+  }
   return false;
 }
 
@@ -2707,11 +2734,15 @@ inline size_t Request::get_header_value_count(const char *key) const {
 }
 
 inline void Request::set_header(const char *key, const char *val) {
-  headers.emplace(key, val);
+  if (!detail::has_crlf(key) && !detail::has_crlf(val)) {
+    headers.emplace(key, val);
+  }
 }
 
 inline void Request::set_header(const char *key, const std::string &val) {
-  headers.emplace(key, val);
+  if (!detail::has_crlf(key) && !detail::has_crlf(val.c_str())) {
+    headers.emplace(key, val);
+  }
 }
 
 inline bool Request::has_param(const char *key) const {
@@ -2761,16 +2792,26 @@ inline size_t Response::get_header_value_count(const char *key) const {
 }
 
 inline void Response::set_header(const char *key, const char *val) {
-  headers.emplace(key, val);
+  if (!detail::has_crlf(key) && !detail::has_crlf(val)) {
+    headers.emplace(key, val);
+  }
 }
 
 inline void Response::set_header(const char *key, const std::string &val) {
-  headers.emplace(key, val);
+  if (!detail::has_crlf(key) && !detail::has_crlf(val.c_str())) {
+    headers.emplace(key, val);
+  }
 }
 
-inline void Response::set_redirect(const char *url) {
-  set_header("Location", url);
-  status = 302;
+inline void Response::set_redirect(const char *url, int status) {
+  if (!detail::has_crlf(url)) {
+    set_header("Location", url);
+    if (300 <= status && status < 400) {
+      this->status = status;
+    } else {
+      this->status = 302;
+    }
+  }
 }
 
 inline void Response::set_content(const char *s, size_t n,
@@ -2779,8 +2820,7 @@ inline void Response::set_content(const char *s, size_t n,
   set_header("Content-Type", content_type);
 }
 
-inline void Response::set_content(std::string s,
-                                  const char *content_type) {
+inline void Response::set_content(std::string s, const char *content_type) {
   body = std::move(s);
   set_header("Content-Type", content_type);
 }
@@ -2965,6 +3005,13 @@ inline Server &Server::Patch(const char *pattern,
 
 inline Server &Server::Delete(const char *pattern, Handler handler) {
   delete_handlers_.push_back(std::make_pair(std::regex(pattern), handler));
+  return *this;
+}
+
+inline Server &Server::Delete(const char *pattern,
+                              HandlerWithContentReader handler) {
+  delete_handlers_for_content_reader_.push_back(
+      std::make_pair(std::regex(pattern), handler));
   return *this;
 }
 
@@ -3244,47 +3291,45 @@ Server::write_content_with_provider(Stream &strm, const Request &req,
   return true;
 }
 
-inline bool Server::read_content(Stream &strm, bool last_connection,
-                                 Request &req, Response &res) {
+inline bool Server::read_content(Stream &strm, Request &req, Response &res) {
   MultipartFormDataMap::iterator cur;
-  auto ret = read_content_core(
-      strm, last_connection, req, res,
-      // Regular
-      [&](const char *buf, size_t n) {
-        if (req.body.size() + n > req.body.max_size()) { return false; }
-        req.body.append(buf, n);
-        return true;
-      },
-      // Multipart
-      [&](const MultipartFormData &file) {
-        cur = req.files.emplace(file.name, file);
-        return true;
-      },
-      [&](const char *buf, size_t n) {
-        auto &content = cur->second.content;
-        if (content.size() + n > content.max_size()) { return false; }
-        content.append(buf, n);
-        return true;
-      });
-
-  const auto &content_type = req.get_header_value("Content-Type");
-  if (!content_type.find("application/x-www-form-urlencoded")) {
-    detail::parse_query_text(req.body, req.params);
+  if (read_content_core(
+          strm, req, res,
+          // Regular
+          [&](const char *buf, size_t n) {
+            if (req.body.size() + n > req.body.max_size()) { return false; }
+            req.body.append(buf, n);
+            return true;
+          },
+          // Multipart
+          [&](const MultipartFormData &file) {
+            cur = req.files.emplace(file.name, file);
+            return true;
+          },
+          [&](const char *buf, size_t n) {
+            auto &content = cur->second.content;
+            if (content.size() + n > content.max_size()) { return false; }
+            content.append(buf, n);
+            return true;
+          })) {
+    const auto &content_type = req.get_header_value("Content-Type");
+    if (!content_type.find("application/x-www-form-urlencoded")) {
+      detail::parse_query_text(req.body, req.params);
+    }
+    return true;
   }
-
-  return ret;
+  return false;
 }
 
 inline bool Server::read_content_with_content_receiver(
-    Stream &strm, bool last_connection, Request &req, Response &res,
-    ContentReceiver receiver, MultipartContentHeader multipart_header,
+    Stream &strm, Request &req, Response &res, ContentReceiver receiver,
+    MultipartContentHeader multipart_header,
     ContentReceiver multipart_receiver) {
-  return read_content_core(strm, last_connection, req, res, receiver,
-                           multipart_header, multipart_receiver);
+  return read_content_core(strm, req, res, receiver, multipart_header,
+                           multipart_receiver);
 }
 
-inline bool Server::read_content_core(Stream &strm, bool last_connection,
-                                      Request &req, Response &res,
+inline bool Server::read_content_core(Stream &strm, Request &req, Response &res,
                                       ContentReceiver receiver,
                                       MultipartContentHeader mulitpart_header,
                                       ContentReceiver multipart_receiver) {
@@ -3296,7 +3341,7 @@ inline bool Server::read_content_core(Stream &strm, bool last_connection,
     std::string boundary;
     if (!detail::parse_multipart_boundary(content_type, boundary)) {
       res.status = 400;
-      return write_response(strm, last_connection, req, res);
+      return false;
     }
 
     multipart_form_data_parser.set_boundary(std::move(boundary));
@@ -3310,13 +3355,13 @@ inline bool Server::read_content_core(Stream &strm, bool last_connection,
 
   if (!detail::read_content(strm, req, payload_max_length_, res.status,
                             Progress(), out)) {
-    return write_response(strm, last_connection, req, res);
+    return false;
   }
 
   if (req.is_multipart_form_data()) {
     if (!multipart_form_data_parser.is_valid()) {
       res.status = 400;
-      return write_response(strm, last_connection, req, res);
+      return false;
     }
   }
 
@@ -3446,8 +3491,7 @@ inline bool Server::listen_internal() {
   return ret;
 }
 
-inline bool Server::routing(Request &req, Response &res, Stream &strm,
-                            bool last_connection) {
+inline bool Server::routing(Request &req, Response &res, Stream &strm) {
   // File handler
   bool is_head_request = req.method == "HEAD";
   if ((req.method == "GET" || is_head_request) &&
@@ -3460,12 +3504,12 @@ inline bool Server::routing(Request &req, Response &res, Stream &strm,
     {
       ContentReader reader(
           [&](ContentReceiver receiver) {
-            return read_content_with_content_receiver(
-                strm, last_connection, req, res, receiver, nullptr, nullptr);
+            return read_content_with_content_receiver(strm, req, res, receiver,
+                                                      nullptr, nullptr);
           },
           [&](MultipartContentHeader header, ContentReceiver receiver) {
-            return read_content_with_content_receiver(
-                strm, last_connection, req, res, nullptr, header, receiver);
+            return read_content_with_content_receiver(strm, req, res, nullptr,
+                                                      header, receiver);
           });
 
       if (req.method == "POST") {
@@ -3483,11 +3527,16 @@ inline bool Server::routing(Request &req, Response &res, Stream &strm,
                 req, res, reader, patch_handlers_for_content_reader_)) {
           return true;
         }
+      } else if (req.method == "DELETE") {
+        if (dispatch_request_for_content_reader(
+                req, res, reader, delete_handlers_for_content_reader_)) {
+          return true;
+        }
       }
     }
 
     // Read content into `req.body`
-    if (!read_content(strm, last_connection, req, res)) { return false; }
+    if (!read_content(strm, req, res)) { return false; }
   }
 
   // Regular handler
@@ -3614,7 +3663,7 @@ Server::process_request(Stream &strm, bool last_connection,
   }
 
   // Rounting
-  if (routing(req, res, strm, last_connection)) {
+  if (routing(req, res, strm)) {
     if (res.status == -1) { res.status = req.ranges.empty() ? 200 : 206; }
   } else {
     if (res.status == -1) { res.status = 404; }
@@ -3836,34 +3885,42 @@ inline bool Client::redirect(const Request &req, Response &res) {
   if (location.empty()) { return false; }
 
   const static std::regex re(
-      R"(^(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*(?:\?[^#]*)?)(?:#.*)?)");
+      R"(^(?:(https?):)?(?://([^:/?#]*)(?::(\d+))?)?([^?#]*(?:\?[^#]*)?)(?:#.*)?)");
 
   std::smatch m;
-  if (!regex_match(location, m, re)) { return false; }
+  if (!std::regex_match(location, m, re)) { return false; }
 
   auto scheme = is_ssl() ? "https" : "http";
 
   auto next_scheme = m[1].str();
   auto next_host = m[2].str();
-  auto next_path = m[3].str();
-  if (next_scheme.empty()) { next_scheme = scheme; }
+  auto port_str = m[3].str();
+  auto next_path = m[4].str();
+
+  auto next_port = port_;
+  if (!port_str.empty()) {
+    next_port = std::stoi(port_str);
+  } else if (!next_scheme.empty()) {
+    next_port = next_scheme == "https" ? 443 : 80;
+  }
+
   if (next_scheme.empty()) { next_scheme = scheme; }
   if (next_host.empty()) { next_host = host_; }
   if (next_path.empty()) { next_path = "/"; }
 
-  if (next_scheme == scheme && next_host == host_) {
+  if (next_scheme == scheme && next_host == host_ && next_port == port_) {
     return detail::redirect(*this, req, res, next_path);
   } else {
     if (next_scheme == "https") {
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-      SSLClient cli(next_host.c_str());
+      SSLClient cli(next_host.c_str(), next_port);
       cli.copy_settings(*this);
       return detail::redirect(cli, req, res, next_path);
 #else
       return false;
 #endif
     } else {
-      Client cli(next_host.c_str());
+      Client cli(next_host.c_str(), next_port);
       cli.copy_settings(*this);
       return detail::redirect(cli, req, res, next_path);
     }
@@ -4035,17 +4092,16 @@ inline bool Client::process_request(Stream &strm, const Request &req,
 
   // Body
   if (req.method != "HEAD" && req.method != "CONNECT") {
-    ContentReceiver out = [&](const char *buf, size_t n) {
-      if (res.body.size() + n > res.body.max_size()) { return false; }
-      res.body.append(buf, n);
-      return true;
-    };
-
-    if (req.content_receiver) {
-      out = [&](const char *buf, size_t n) {
-        return req.content_receiver(buf, n);
-      };
-    }
+    auto out =
+        req.content_receiver
+            ? static_cast<ContentReceiver>([&](const char *buf, size_t n) {
+                return req.content_receiver(buf, n);
+              })
+            : static_cast<ContentReceiver>([&](const char *buf, size_t n) {
+                if (res.body.size() + n > res.body.max_size()) { return false; }
+                res.body.append(buf, n);
+                return true;
+              });
 
     int dummy_status;
     if (!detail::read_content(strm, res, (std::numeric_limits<size_t>::max)(),
@@ -4471,7 +4527,9 @@ inline bool process_and_close_socket_ssl(
     }
   }
 
-  SSL_shutdown(ssl);
+  if (ret) {
+    SSL_shutdown(ssl); // shutdown only if not already closed by remote
+  }
   {
     std::lock_guard<std::mutex> guard(ctx_mutex);
     SSL_free(ssl);
@@ -4498,11 +4556,11 @@ public:
 private:
   static void locking_callback(int mode, int type, const char * /*file*/,
                                int /*line*/) {
-    auto &locks = *openSSL_locks_;
+    auto &lk = (*openSSL_locks_)[static_cast<size_t>(type)];
     if (mode & CRYPTO_LOCK) {
-      locks[type].lock();
+      lk.lock();
     } else {
-      locks[type].unlock();
+      lk.unlock();
     }
   }
 };
@@ -4610,6 +4668,33 @@ inline SSLServer::SSLServer(const char *cert_path, const char *private_key_path,
   }
 }
 
+inline SSLServer::SSLServer(X509 *cert, EVP_PKEY *private_key,
+                            X509_STORE *client_ca_cert_store) {
+  ctx_ = SSL_CTX_new(SSLv23_server_method());
+
+  if (ctx_) {
+    SSL_CTX_set_options(ctx_,
+                        SSL_OP_ALL | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 |
+                            SSL_OP_NO_COMPRESSION |
+                            SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+
+    if (SSL_CTX_use_certificate(ctx_, cert) != 1 ||
+        SSL_CTX_use_PrivateKey(ctx_, private_key) != 1) {
+      SSL_CTX_free(ctx_);
+      ctx_ = nullptr;
+    } else if (client_ca_cert_store) {
+
+      SSL_CTX_set_cert_store(ctx_, client_ca_cert_store);
+
+      SSL_CTX_set_verify(
+          ctx_,
+          SSL_VERIFY_PEER |
+              SSL_VERIFY_FAIL_IF_NO_PEER_CERT, // SSL_VERIFY_CLIENT_ONCE,
+          nullptr);
+    }
+  }
+}
+
 inline SSLServer::~SSLServer() {
   if (ctx_) { SSL_CTX_free(ctx_); }
 }
@@ -4649,6 +4734,24 @@ inline SSLClient::SSLClient(const std::string &host, int port,
   }
 }
 
+inline SSLClient::SSLClient(const std::string &host, int port,
+                            X509 *client_cert, EVP_PKEY *client_key)
+    : Client(host, port) {
+  ctx_ = SSL_CTX_new(SSLv23_client_method());
+
+  detail::split(&host_[0], &host_[host_.size()], '.',
+                [&](const char *b, const char *e) {
+                  host_components_.emplace_back(std::string(b, e));
+                });
+  if (client_cert != nullptr && client_key != nullptr) {
+    if (SSL_CTX_use_certificate(ctx_, client_cert) != 1 ||
+        SSL_CTX_use_PrivateKey(ctx_, client_key) != 1) {
+      SSL_CTX_free(ctx_);
+      ctx_ = nullptr;
+    }
+  }
+}
+
 inline SSLClient::~SSLClient() {
   if (ctx_) { SSL_CTX_free(ctx_); }
 }
@@ -4661,6 +4764,10 @@ inline void SSLClient::set_ca_cert_path(const char *ca_cert_file_path,
   if (ca_cert_dir_path) { ca_cert_dir_path_ = ca_cert_dir_path; }
 }
 
+inline void SSLClient::set_ca_cert_store(X509_STORE *ca_cert_store) {
+  if (ca_cert_store) { ca_cert_store_ = ca_cert_store; }
+}
+
 inline void SSLClient::enable_server_certificate_verification(bool enabled) {
   server_certificate_verification_ = enabled;
 }
@@ -4669,7 +4776,7 @@ inline long SSLClient::get_openssl_verify_result() const {
   return verify_result_;
 }
 
-inline SSL_CTX *SSLClient::ssl_context() const noexcept { return ctx_; }
+inline SSL_CTX *SSLClient::ssl_context() const { return ctx_; }
 
 inline bool SSLClient::process_and_close_socket(
     socket_t sock, size_t request_count,
@@ -4684,12 +4791,17 @@ inline bool SSLClient::process_and_close_socket(
              true, sock, request_count, read_timeout_sec_, read_timeout_usec_,
              ctx_, ctx_mutex_,
              [&](SSL *ssl) {
-               if (ca_cert_file_path_.empty()) {
+               if (ca_cert_file_path_.empty() && ca_cert_store_ == nullptr) {
                  SSL_CTX_set_verify(ctx_, SSL_VERIFY_NONE, nullptr);
-               } else {
+               } else if (!ca_cert_file_path_.empty()) {
                  if (!SSL_CTX_load_verify_locations(
                          ctx_, ca_cert_file_path_.c_str(), nullptr)) {
                    return false;
+                 }
+                 SSL_CTX_set_verify(ctx_, SSL_VERIFY_PEER, nullptr);
+               } else if (ca_cert_store_ != nullptr) {
+                 if (SSL_CTX_get_cert_store(ctx_) != ca_cert_store_) {
+                   SSL_CTX_set_cert_store(ctx_, ca_cert_store_);
                  }
                  SSL_CTX_set_verify(ctx_, SSL_VERIFY_PEER, nullptr);
                }
@@ -4854,6 +4966,63 @@ inline bool SSLClient::check_host_name(const char *pattern,
   return true;
 }
 #endif
+
+namespace url {
+
+struct Options {
+  // TODO: support more options...
+  bool follow_location = false;
+  std::string client_cert_path;
+  std::string client_key_path;
+
+  std::string ca_cert_file_path;
+  std::string ca_cert_dir_path;
+  bool server_certificate_verification = false;
+};
+
+inline std::shared_ptr<Response> Get(const char *url, Options &options) {
+  const static std::regex re(
+      R"(^(https?)://([^:/?#]+)(?::(\d+))?([^?#]*(?:\?[^#]*)?)(?:#.*)?)");
+
+  std::cmatch m;
+  if (!std::regex_match(url, m, re)) { return nullptr; }
+
+  auto next_scheme = m[1].str();
+  auto next_host = m[2].str();
+  auto port_str = m[3].str();
+  auto next_path = m[4].str();
+
+  auto next_port = !port_str.empty() ? std::stoi(port_str)
+                                     : (next_scheme == "https" ? 443 : 80);
+
+  if (next_path.empty()) { next_path = "/"; }
+
+  if (next_scheme == "https") {
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+    SSLClient cli(next_host.c_str(), next_port, options.client_cert_path,
+                  options.client_key_path);
+    cli.set_follow_location(options.follow_location);
+    cli.set_ca_cert_path(options.ca_cert_file_path.c_str(), options.ca_cert_dir_path.c_str());
+    cli.enable_server_certificate_verification(
+        options.server_certificate_verification);
+    return cli.Get(next_path.c_str());
+#else
+    return nullptr;
+#endif
+  } else {
+    Client cli(next_host.c_str(), next_port, options.client_cert_path,
+               options.client_key_path);
+    cli.set_follow_location(options.follow_location);
+    return cli.Get(next_path.c_str());
+  }
+}
+
+inline std::shared_ptr<Response> Get(const char *url) {
+  Options options;
+  return Get(url, options);
+}
+
+} // namespace url
 
 // ----------------------------------------------------------------------------
 
