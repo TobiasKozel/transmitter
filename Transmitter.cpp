@@ -293,25 +293,26 @@ void Transmitter::setupResampling() {
 
 #if IPLUG_DSP
 void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
-  if (!mResamplingSetup) {
-    setupResampling();
-  }
-  unsigned o = 0;
-  for (int c = 0; c < mChannelCount; c++) {
-    unsigned int inl = nFrames;
-    unsigned int outl = 4096;
-    mUp.speex_resampler_process_float(c, inputs[c], &inl, mResamplingBuffer[c], &outl);
-    int a = 0;
-    o = outl;
-  }
+  //if (!mResamplingSetup) {
+  //  setupResampling();
+  //}
+  //unsigned o = 0;
+  //for (int c = 0; c < mChannelCount; c++) {
+  //  unsigned int inl = nFrames;
+  //  unsigned int outl = 4096;
+  //  mUp.process(c, inputs[c], &inl, mResamplingBuffer[c], &outl);
+  //  int a = 0;
+  //  o = outl;
+  //}
 
-  for (int c = 0; c < 2; c++) {
-    unsigned int inl = o;
-    unsigned int outl = nFrames;
-    mDown.speex_resampler_process_float(c, mResamplingBuffer[c], &inl, outputs[c], &outl);
-    int a = 0;
-  }
-  return;
+  //for (int c = 0; c < 2; c++) {
+  //  unsigned int inl = o;
+  //  unsigned int outl = nFrames;
+  //  mDown.process(c, mResamplingBuffer[c], &inl, outputs[c], &outl);
+  //  int a = 0;
+  //}
+  //return;
+
   /**
    * Process the block in smaller bits since it's too large
    * Also abused to lower the delay a feedback node creates
@@ -350,8 +351,21 @@ void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   if (mMSession != nullptr) {
     mMSession->setBufferSize(bufferSize);
     if (mResamplingSetup) {
+      unsigned resampledFrames = 0;
+      for (int c = 0; c < mChannelCount; c++) {
+        unsigned int inl = nFrames;
+        unsigned int outl = MAX_BUFFER_SIZE * 4;
+        mUp.process(c, inputs[c], &inl, mResamplingBuffer[c], &outl);
+        resampledFrames = outl;
+      }
 
-      // mMSession->ProcessBlock(const_cast<const sample**>(mRsIn.buffer), mRsOut.buffer, rsSamples2);
+      mMSession->ProcessBlock(const_cast<const sample**>(mResamplingBuffer), mResamplingBuffer, resampledFrames);
+
+      for (int c = 0; c < 2; c++) {
+        unsigned int inl = resampledFrames;
+        unsigned int outl = nFrames;
+        mDown.process(c, mResamplingBuffer[c], &inl, outputs[c], &outl);
+      }
     } else {
       mMSession->ProcessBlock(const_cast<const sample**>(inputs), outputs, nFrames);
     }

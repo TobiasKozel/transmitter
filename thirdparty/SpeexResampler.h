@@ -301,7 +301,7 @@ namespace transmitter {
     int    in_stride;
     int    out_stride;
 
-    int resampler_basic_direct_single(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
+    int direct_single(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
       SpeexResampler* st = this;
       const int N = st->filt_len;
       int out_sample = 0;
@@ -345,7 +345,7 @@ namespace transmitter {
     }
 
     /* This is the same as the previous function, except with a double-precision accumulator */
-    int resampler_basic_direct_double(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
+    int direct_double(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
       SpeexResampler* st = this;
       const int N = st->filt_len;
       int out_sample = 0;
@@ -393,7 +393,7 @@ namespace transmitter {
       return out_sample;
     }
 
-    int resampler_basic_interpolate_single(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
+    int interpolate_single(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
       SpeexResampler* st = this;
       const int N = st->filt_len;
       int out_sample = 0;
@@ -449,7 +449,7 @@ namespace transmitter {
       return out_sample;
     }
 
-    int resampler_basic_interpolate_double(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
+    int interpolate_double(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
       SpeexResampler* st = this;
       const int N = st->filt_len;
       int out_sample = 0;
@@ -508,7 +508,7 @@ namespace transmitter {
        for the filter could not be allocated.  The expected numbers of input and
        output samples are still processed so that callers failing to check error
        codes are not surprised, possibly getting into infinite loops. */
-    int resampler_basic_zero(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
+    int basic_zero(spx_uint32_t channel_index, const spx_word16_t* in, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
       SpeexResampler* st = this;
       int out_sample = 0;
       int last_sample = st->last_sample[channel_index];
@@ -726,7 +726,7 @@ namespace transmitter {
       return RESAMPLER_ERR_ALLOC_FAILED;
     }
 
-    int speex_resampler_process_native(spx_uint32_t channel_index, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
+    int process_native(spx_uint32_t channel_index, spx_uint32_t* in_len, spx_word16_t* out, spx_uint32_t* out_len) {
       SpeexResampler* st = this;
       int j = 0;
       const int N = st->filt_len;
@@ -739,19 +739,19 @@ namespace transmitter {
       /* Call the right resampler */
       switch (active_resampler) {
       case DIRECT_SINGLE:
-        out_sample = resampler_basic_direct_single(channel_index, mem, in_len, out, out_len);
+        out_sample = direct_single(channel_index, mem, in_len, out, out_len);
         break;
       case DIRECT_DOUBLE:
-        out_sample = resampler_basic_direct_double(channel_index, mem, in_len, out, out_len);
+        out_sample = direct_double(channel_index, mem, in_len, out, out_len);
         break;
       case INTERP_SINGLE:
-        out_sample = resampler_basic_interpolate_single(channel_index, mem, in_len, out, out_len);
+        out_sample = interpolate_single(channel_index, mem, in_len, out, out_len);
         break;
       case INTERP_DOUBLE:
-        out_sample = resampler_basic_interpolate_double(channel_index, mem, in_len, out, out_len);
+        out_sample = interpolate_double(channel_index, mem, in_len, out, out_len);
         break;
       default:
-        out_sample = resampler_basic_zero(channel_index, mem, in_len, out, out_len);
+        out_sample = basic_zero(channel_index, mem, in_len, out, out_len);
       }
 
       if (st->last_sample[channel_index] < (spx_int32_t)*in_len)
@@ -767,13 +767,13 @@ namespace transmitter {
       return RESAMPLER_ERR_SUCCESS;
     }
 
-    int speex_resampler_magic(spx_uint32_t channel_index, spx_word16_t** out, spx_uint32_t out_len) {
+    int magic(spx_uint32_t channel_index, spx_word16_t** out, spx_uint32_t out_len) {
       SpeexResampler* st = this;
       spx_uint32_t tmp_in_len = st->magic_samples[channel_index];
       spx_word16_t* mem = st->mem + channel_index * st->mem_alloc_size;
       const int N = st->filt_len;
 
-      speex_resampler_process_native(channel_index, &tmp_in_len, *out, &out_len);
+      process_native(channel_index, &tmp_in_len, *out, &out_len);
 
       st->magic_samples[channel_index] -= tmp_in_len;
 
@@ -817,6 +817,15 @@ namespace transmitter {
       speex_free(samp_frac_num);
     }
 
+    /** Create a new resampler with integer input and output rates.
+     * @param nb_channels Number of channels to be processed
+     * @param rate_in Input sampling rate (integer number of Hz).
+     * @param rate_out Output sampling rate (integer number of Hz).
+     * @param quality Resampling quality between 0 and 10, where 0 has poor quality
+     * and 10 has very high quality.
+     * @return Newly created resampler state
+     * @retval NULL Error: not enough memory
+     */
     int init(spx_uint32_t nb_channels, spx_uint32_t rate_in, spx_uint32_t rate_out, int quality, int* err) {
       int filter_err;
       SpeexResampler* st = this;
@@ -831,9 +840,9 @@ namespace transmitter {
       if (!(st->samp_frac_num = (spx_uint32_t*)speex_alloc(nb_channels * sizeof(spx_uint32_t))))
         return -1;
 
-      speex_resampler_set_quality(quality);
+      set_quality(quality);
 
-      speex_resampler_set_rate_frac(rate_in, rate_out, rate_in, rate_out);
+      set_rate_frac(rate_in, rate_out, rate_in, rate_out);
 
       filter_err = update_filter();
       if (filter_err == RESAMPLER_ERR_SUCCESS)
@@ -843,7 +852,17 @@ namespace transmitter {
       return filter_err;
     }
 
-    int speex_resampler_process_float(spx_uint32_t channel_index, const float* in, spx_uint32_t* in_len, float* out, spx_uint32_t* out_len) {
+    /** Resample a float array. The input and output buffers must *not* overlap.
+     * @param st Resampler state
+     * @param channel_index Index of the channel to process for the multi-channel
+     * base (0 otherwise)
+     * @param in Input buffer
+     * @param in_len Number of input samples in the input buffer. Returns the
+     * number of samples processed
+     * @param out Output buffer
+     * @param out_len Size of the output buffer. Returns the number of samples written
+     */
+    int process(spx_uint32_t channel_index, const float* in, spx_uint32_t* in_len, float* out, spx_uint32_t* out_len) {
       SpeexResampler* st = this;
       int j;
       spx_uint32_t ilen = *in_len;
@@ -854,7 +873,7 @@ namespace transmitter {
       const int istride = st->in_stride;
 
       if (st->magic_samples[channel_index])
-        olen -= speex_resampler_magic(channel_index, &out, olen);
+        olen -= magic(channel_index, &out, olen);
       if (!st->magic_samples[channel_index]) {
         while (ilen && olen) {
           spx_uint32_t ichunk = (ilen > xlen) ? xlen : ilen;
@@ -868,7 +887,7 @@ namespace transmitter {
             for (j = 0; j < ichunk; ++j)
               x[j + filt_offs] = 0;
           }
-          speex_resampler_process_native(channel_index, &ichunk, out, &ochunk);
+          process_native(channel_index, &ichunk, out, &ochunk);
           ilen -= ichunk;
           olen -= ochunk;
           out += ochunk * st->out_stride;
@@ -881,17 +900,35 @@ namespace transmitter {
       return active_resampler == ZERO ? RESAMPLER_ERR_ALLOC_FAILED : RESAMPLER_ERR_SUCCESS;
     }
 
-    int speex_resampler_set_rate(spx_uint32_t in_rate, spx_uint32_t out_rate) {
-      return speex_resampler_set_rate_frac(in_rate, out_rate, in_rate, out_rate);
+    /** Set (change) the input/output sampling rates (integer value).
+     * @param st Resampler state
+     * @param in_rate Input sampling rate (integer number of Hz).
+     * @param out_rate Output sampling rate (integer number of Hz).
+     */
+    int set_rate(spx_uint32_t in_rate, spx_uint32_t out_rate) {
+      return set_rate_frac(in_rate, out_rate, in_rate, out_rate);
     }
 
-    void speex_resampler_get_rate(spx_uint32_t* in_rate, spx_uint32_t* out_rate) {
+    /** Get the current input/output sampling rates (integer value).
+     * @param st Resampler state
+     * @param in_rate Input sampling rate (integer number of Hz) copied.
+     * @param out_rate Output sampling rate (integer number of Hz) copied.
+     */
+    void get_rate(spx_uint32_t* in_rate, spx_uint32_t* out_rate) {
       SpeexResampler* st = this;
       *in_rate = st->in_rate;
       *out_rate = st->out_rate;
     }
 
-    int speex_resampler_set_rate_frac(spx_uint32_t ratio_num, spx_uint32_t ratio_den, spx_uint32_t in_rate, spx_uint32_t out_rate) {
+    /** Set (change) the input/output sampling rates and resampling ratio
+     * (fractional values in Hz supported).
+     * @param st Resampler state
+     * @param ratio_num Numerator of the sampling rate ratio
+     * @param ratio_den Denominator of the sampling rate ratio
+     * @param in_rate Input sampling rate rounded to the nearest integer (in Hz).
+     * @param out_rate Output sampling rate rounded to the nearest integer (in Hz).
+     */
+    int set_rate_frac(spx_uint32_t ratio_num, spx_uint32_t ratio_den, spx_uint32_t in_rate, spx_uint32_t out_rate) {
       SpeexResampler* st = this;
       spx_uint32_t fact;
       spx_uint32_t old_den;
@@ -931,12 +968,23 @@ namespace transmitter {
       return RESAMPLER_ERR_SUCCESS;
     }
 
-    void speex_resampler_get_ratio(spx_uint32_t* ratio_num, spx_uint32_t* ratio_den) {
+    /** Get the current resampling ratio. This will be reduced to the least
+     * common denominator.
+     * @param st Resampler state
+     * @param ratio_num Numerator of the sampling rate ratio copied
+     * @param ratio_den Denominator of the sampling rate ratio copied
+     */
+    void get_ratio(spx_uint32_t* ratio_num, spx_uint32_t* ratio_den) {
       *ratio_num = num_rate;
       *ratio_den = den_rate;
     }
 
-    int speex_resampler_set_quality(int pQuality) {
+    /** Set (change) the conversion quality.
+     * @param st Resampler state
+     * @param quality Resampling quality between 0 and 10, where 0 has poor
+     * quality and 10 has very high quality.
+     */
+    int set_quality(int pQuality) {
       if (pQuality > 10 || pQuality < 0)
         return RESAMPLER_ERR_INVALID_ARG;
       if (quality == pQuality)
@@ -947,42 +995,80 @@ namespace transmitter {
       return RESAMPLER_ERR_SUCCESS;
     }
 
-    void speex_resampler_get_quality(int* pQuality) {
+    /** Get the conversion quality.
+     * @param st Resampler state
+     * @param quality Resampling quality between 0 and 10, where 0 has poor
+     * quality and 10 has very high quality.
+     */
+    void get_quality(int* pQuality) {
       *pQuality = quality;
     }
 
-    void speex_resampler_set_input_stride(spx_uint32_t stride) {
+    /** Set (change) the input stride.
+     * @param st Resampler state
+     * @param stride Input stride
+     */
+    void set_input_stride(spx_uint32_t stride) {
       in_stride = stride;
     }
 
-    void speex_resampler_get_input_stride(spx_uint32_t* stride) {
+    /** Get the input stride.
+     * @param st Resampler state
+     * @param stride Input stride copied
+     */
+    void get_input_stride(spx_uint32_t* stride) {
       *stride = in_stride;
     }
 
-    void speex_resampler_set_output_stride(spx_uint32_t stride) {
+    /** Set (change) the output stride.
+     * @param st Resampler state
+     * @param stride Output stride
+     */
+    void set_output_stride(spx_uint32_t stride) {
       out_stride = stride;
     }
 
-    void speex_resampler_get_output_stride(spx_uint32_t* stride) {
+    /** Get the output stride.
+     * @param st Resampler state copied
+     * @param stride Output stride
+     */
+    void get_output_stride(spx_uint32_t* stride) {
       *stride = out_stride;
     }
 
-    int speex_resampler_get_input_latency() {
+    /** Get the latency introduced by the resampler measured in input samples.
+     * @param st Resampler state
+     */
+    int get_input_latency() {
       return filt_len / 2;
     }
 
-    int speex_resampler_get_output_latency() {
+    /** Get the latency introduced by the resampler measured in output samples.
+     * @param st Resampler state
+     */
+    int get_output_latency() {
       return ((filt_len / 2) * den_rate + (num_rate >> 1)) / num_rate;
     }
 
-    int speex_resampler_skip_zeros() {
+    /** Make sure that the first samples to go out of the resamplers don't have
+     * leading zeros. This is only useful before starting to use a newly created
+     * resampler. It is recommended to use that when resampling an audio file, as
+     * it will generate a file with the same length. For real-time processing,
+     * it is probably easier not to use this call (so that the output duration
+     * is the same for the first frame).
+     * @param st Resampler state
+     */
+    int skip_zeros() {
       spx_uint32_t i;
       for (i = 0; i < nb_channels; i++)
         last_sample[i] = filt_len / 2;
       return RESAMPLER_ERR_SUCCESS;
     }
 
-    int speex_resampler_reset_mem() {
+    /** Reset a resampler so a new (unrelated) stream can be processed.
+     * @param st Resampler state
+     */
+    int reset_mem() {
       spx_uint32_t i;
       for (i = 0; i < nb_channels; i++) {
         last_sample[i] = 0;
