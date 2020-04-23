@@ -13,7 +13,7 @@ EMSCRIPTEN_BINDINGS() {
         .constructor()
         .function("encode", optional_override(
             [](MultiCodec& self, int _input, int count, int _packet) {
-                float** input = reinterpret_cast<float**>(_input);
+                const float** input = reinterpret_cast<const float**>(_input);
                 unsigned char* packet = reinterpret_cast<unsigned char*>(_packet);
                 return self.encode(input, count, packet);
             })

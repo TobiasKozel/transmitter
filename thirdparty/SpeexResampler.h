@@ -106,7 +106,9 @@ namespace transmitter {
   //  return a;
   //}
 
-  static const double M_PI = 3.14159265358979323846;
+  #ifndef M_PI
+    #define M_PI 3.14159265358979323846
+  #endif
 
   static const double kaiser12_table[68] = {
     0.99859849, 1.00000000, 0.99859849, 0.99440475, 0.98745105, 0.97779076,
