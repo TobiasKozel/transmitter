@@ -4,8 +4,6 @@
 #include "./CodecRAW.h"
 #include "../thirdparty/RingBuffer.h"
 
-#define __EMSCRIPTEN__
-
 #ifdef __EMSCRIPTEN__
 #include "../thirdparty/SpeexResampler.h"
 #include "../thirdparty/HOheapbuf.h"
