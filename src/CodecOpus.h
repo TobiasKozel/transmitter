@@ -49,12 +49,10 @@ namespace transmitter {
     }
 
   private:
-    int encodeImpl(const float** samples, int count, unsigned char* result) override {
-      mBuffer[0].add(samples[0], count);
-      mBuffer[1].add(samples[1], count);
-      if (mFrameSize <= mBuffer[0].inBuffer()) {
+    int encodeImpl(MultiRingBuffer<sample, 2>* mBuffer, unsigned char* result) override {
+      if (mFrameSize <= mBuffer->inBuffer()) {
         for (int c = 0; c < 2; c++) {
-          mBuffer[c].get(mPreInterleave, mFrameSize);
+          mBuffer->get(mPreInterleave, mFrameSize, c);
           for (int i = c, s = 0; s < mFrameSize; i += 2, s++) {
             mInterleaved[i] = mPreInterleave[s]; // interleave the signal
           }
@@ -91,7 +89,6 @@ namespace transmitter {
       if (err < 0) {
         assert(false);
       }
-      resizeBuffer(4096);
     }
 
     ~WrappedOpusDecoder() {
@@ -99,16 +96,17 @@ namespace transmitter {
     }
 
   private:
-    void decodeImpl(const unsigned char* data, const int size) override {
+    int decodeImpl(const unsigned char* data, const int size, DecodeCallback& callback) override {
       const int frames = opus_decode_float(mDecoder, data, size, mInterleaved, 2880 * 2, 0);
       if (frames > 0) {
         for (int c = 0; c < 2; c++) {
           for (int i = c, s = 0; s < frames; i += 2, s++) {
             mPostInterleave[s] = mInterleaved[i];
           }
-          mBuffer[c].add(mPostInterleave, frames);
+          callback(frames, mPostInterleave, c);
         }
       }
+      return 0;
     }
   };
 }

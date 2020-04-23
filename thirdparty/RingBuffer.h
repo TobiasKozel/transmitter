@@ -146,6 +146,10 @@ namespace transmitter {
       return ret;
     }
 
+    int get(T* out, const int elements, const int channel) {
+      return mBuffers[channel].get(out, elements);
+    }
+
     int get(T** out, const int elements) {
       int ret;
       for (int c = 0; c < channels; c++) {
@@ -153,8 +157,12 @@ namespace transmitter {
       }
       return ret;
     }
+
+    int add(const T* in, const int elements, const int channel) {
+      return mBuffers[channel].add(in, elements);
+    }
   	
-    int add(T** in, int elements) {
+    int add(const T** in, int elements) {
       int ret;
     	for (int c = 0; c < channels; c++) {
 			ret = mBuffers[c].add(in[c], elements);
