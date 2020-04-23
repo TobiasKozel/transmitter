@@ -40,9 +40,14 @@ namespace transmitter {
       return strncmp(mName, static_cast<const char*>(name), 4) == 0;
     }
 
+    /**
+     * Tells the multi codec how large the input buffer needs to be
+     */
     const char* getName() const {
       return mName;
     }
+
+    virtual int getMaxBlockSize() const = 0;
   };
 
   class DecoderBase {

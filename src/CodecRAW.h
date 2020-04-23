@@ -15,6 +15,10 @@ namespace transmitter {
     ~RAWEncoder() {
     }
 
+    int getMaxBlockSize() const override {
+      return  MAX_PACKET_SIZE / 10;
+    }
+
   private:
     int encodeImpl(MultiRingBuffer<sample, 2>* mBuffer, unsigned char* result) override {
       if (mFrameSize <= mBuffer->inBuffer()) {

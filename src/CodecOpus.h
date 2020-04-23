@@ -48,6 +48,10 @@ namespace transmitter {
       mFrameSize = frameSize;
     }
 
+    int getMaxBlockSize() const override {
+      return 960;
+    }
+
   private:
     int encodeImpl(MultiRingBuffer<sample, 2>* mBuffer, unsigned char* result) override {
       if (mFrameSize <= mBuffer->inBuffer()) {

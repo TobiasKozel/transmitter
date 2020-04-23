@@ -24,7 +24,7 @@ Transmitter::Transmitter(const iplug::InstanceInfo& info) : iplug::Plugin(info, 
   GetParam(kBufferSize)->InitDouble("Receive Buffer Size", 960 * 2, 16, 10000, 1);
   GetParam(kFrameSize)->InitEnum(
     "OPUS Frame Size", 1, 4, "Samples", iplug::IParam::kFlagsNone,
-    "", "120", "240", "480", "960", "1920", "2880"
+    "", "120", "240", "480", "960"
   );
 
 #if IPLUG_EDITOR // http://bit.ly/2S64BDd

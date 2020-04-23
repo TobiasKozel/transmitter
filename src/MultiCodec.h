@@ -18,7 +18,6 @@ namespace transmitter {
   class MultiCodec {
     /**
      * Encoders usually need a certain number of frames to encode a packet
-     * They'll need init the size accordingly
      */
     MultiRingBuffer<sample, 2> mBufferIn;
     /**
@@ -39,7 +38,7 @@ namespace transmitter {
     RAWEncoder mRawEncoder;
 
     DecoderBase* mActiveDecoder = nullptr;
-    EncoderBase* mActiveEncoder = &mOpusEncoder;
+    EncoderBase* mActiveEncoder = nullptr;
 
     const int mChannels = 2; // No idea if this will ever change
     int mBufferSize = 2048; // Decoder buffer size
@@ -47,6 +46,7 @@ namespace transmitter {
   public:
     MultiCodec() {
       mBufferOut.setSize(mBufferSize);
+      setEncoder(mOpusEncoder.getName());
     }
     /**
      * Sets the buffer size for the decoding buffer
@@ -62,10 +62,12 @@ namespace transmitter {
     void setEncoder(const void* name) {
       if (mOpusEncoder.compareName(name)) {
         mActiveEncoder = &mOpusEncoder;
-        return;
       }
-      if (mRawEncoder.compareName(name)) {
+      else if (mRawEncoder.compareName(name)) {
         mActiveEncoder = &mRawEncoder;
+      }
+      if (mActiveEncoder != nullptr) {
+        mBufferIn.setSize(mActiveEncoder->getMaxBlockSize());
       }
     }
 
