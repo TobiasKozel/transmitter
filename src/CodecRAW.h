@@ -16,7 +16,7 @@ namespace transmitter {
     }
 
     int getMaxBlockSize() const override {
-      return  MAX_PACKET_SIZE / 10;
+      return  mFrameSize;
     }
 
   private:

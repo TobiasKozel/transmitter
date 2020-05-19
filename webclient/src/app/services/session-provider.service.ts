@@ -123,7 +123,7 @@ export class SessionProviderService implements OnDestroy {
 				return;
 			}
 			this.audioContext = new ctx(
-				{latencyHint: "playback", sampleRate: 48000}
+				{ latencyHint: "interactive", sampleRate: 48000 }
 			);
 			console.log("Audio context created with a samplerate of " + this.audioContext.sampleRate);
 			if (this.audioContext.sampleRate !== 48000) {

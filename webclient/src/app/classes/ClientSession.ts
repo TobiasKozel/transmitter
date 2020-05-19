@@ -54,7 +54,7 @@ export class ClientSession {
      * The name to be displayed in the gui
      */
 	public displayName = "";
-	public codecBufferSize = 2048;
+	public codecBufferSize = 5000;
 	public views = 0;
 
 	constructor(

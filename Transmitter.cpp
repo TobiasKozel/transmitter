@@ -293,26 +293,6 @@ void Transmitter::setupResampling() {
 
 #if IPLUG_DSP
 void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
-  //if (!mResamplingSetup) {
-  //  setupResampling();
-  //}
-  //unsigned o = 0;
-  //for (int c = 0; c < mChannelCount; c++) {
-  //  unsigned int inl = nFrames;
-  //  unsigned int outl = 4096;
-  //  mUp.process(c, inputs[c], &inl, mResamplingBuffer[c], &outl);
-  //  int a = 0;
-  //  o = outl;
-  //}
-
-  //for (int c = 0; c < 2; c++) {
-  //  unsigned int inl = o;
-  //  unsigned int outl = nFrames;
-  //  mDown.process(c, mResamplingBuffer[c], &inl, outputs[c], &outl);
-  //  int a = 0;
-  //}
-  //return;
-
   /**
    * Process the block in smaller bits since it's too large
    * Also abused to lower the delay a feedback node creates
@@ -348,7 +328,7 @@ void Transmitter::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
       outputs[c][i] = 0;
     }
   }
-  if (mMSession != nullptr) {
+  if (mMSession != nullptr && !GetRenderingOffline()) {
     mMSession->setBufferSize(bufferSize);
     if (mResamplingSetup) {
       unsigned resampledFrames = 0;

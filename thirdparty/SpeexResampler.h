@@ -273,8 +273,6 @@ namespace transmitter {
 
   class SpeexResampler {
     RESAMPLER_FUN active_resampler = NONE;
-    // typedef int (SpeexResampler::*resampler_basic_func)(spx_uint32_t, const spx_word16_t*, spx_uint32_t*, spx_word16_t*, spx_uint32_t*);
-    // int (SpeexResampler::* resampler_ptr)(spx_uint32_t, const spx_word16_t*, spx_uint32_t*, spx_word16_t*, spx_uint32_t*) = nullptr;
     spx_uint32_t in_rate;
     spx_uint32_t out_rate;
     spx_uint32_t num_rate;
