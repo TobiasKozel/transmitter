@@ -1,4 +1,9 @@
+**Not under development and also not production ready**
+
+https://github.com/sonosaurus/sonobus is a better choice in every way, however it does not support streaming to a webclient at the time of writing this.
+
 # Transmitter
+
 A vst/au plugin and webclient which makes sharing audio easy (Hopefully).
 
 Transmitter consists out of 3 components
